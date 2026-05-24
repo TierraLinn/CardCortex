@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Assistant | CardCortex</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="assistant">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a>
+        </nav>
+        <a class="nav-cta" href="./scanner.html">Scan a card</a>
+      </header>
+      <main class="app-page assistant-page">
+        <section class="page-heading">
+          <div>
+            <h1>CardCortex AI advisor</h1>
+            <p>Ask about grading, values, selling strategy, storage, insurance records, or what to scan next.</p>
+          </div>
+        </section>
+        <section class="chat-shell">
+          <div id="chatLog" class="chat-log"></div>
+          <form id="chatForm" class="chat-form">
+            <input id="chatInput" type="text" placeholder="Ask CardCortex what to do with your cards..." />
+            <button class="primary-button" type="submit">Ask</button>
+          </form>
+        </section>
+      </main>
+    </div>
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

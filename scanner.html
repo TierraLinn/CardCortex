@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scanner | CardCortex</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="scanner">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a>
+        </nav>
+        <a class="nav-cta" href="./vault.html">View vault</a>
+      </header>
+      <main class="app-page scanner-layout">
+        <section class="scanner-stage">
+          <div class="camera-frame">
+            <video id="cameraFeed" autoplay playsinline muted></video>
+            <canvas id="scanCanvas"></canvas>
+            <div class="scan-reticle"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <div class="scanner-actions">
+            <button id="cameraButton" class="primary-button" type="button">Start camera</button>
+            <button id="captureButton" class="secondary-button" type="button">Capture scan</button>
+            <label class="upload-button">
+              Upload image
+              <input id="uploadInput" type="file" accept="image/*" />
+            </label>
+          </div>
+        </section>
+        <aside class="scan-result">
+          <h1>AI scanner</h1>
+          <p>Prototype scanner uses your camera or uploaded image, then simulates the card-identification pipeline that will later connect to vision AI and pricing APIs.</p>
+          <div id="scanStatus" class="ai-panel">Waiting for a scan.</div>
+          <div id="scanResult"></div>
+        </aside>
+      </main>
+    </div>
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

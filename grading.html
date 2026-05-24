@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Grading | CardCortex</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="grading">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a>
+        </nav>
+        <a class="nav-cta" href="./scanner.html">Scan condition</a>
+      </header>
+      <main class="app-page grading-page">
+        <section class="page-heading">
+          <div>
+            <h1>AI pre-grading lab</h1>
+            <p>Estimate condition from multiple inspection angles before deciding whether to submit for official grading.</p>
+          </div>
+          <div class="value-tile"><small>Certification preview</small><strong id="certNumber">CC-0000</strong></div>
+        </section>
+        <section class="grading-lab">
+          <div class="grade-card holo-card">
+            <span id="gradeName">Charizard 4/102</span>
+            <strong id="gradeScore">9.1</strong>
+            <small>AI confidence 88%</small>
+          </div>
+          <div id="gradeBreakdown" class="grade-breakdown"></div>
+        </section>
+      </main>
+    </div>
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

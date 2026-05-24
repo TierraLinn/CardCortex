@@ -1,0 +1,39 @@
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[redirects]]
+  from = "/vault"
+  to = "/vault.html"
+  status = 200
+
+[[redirects]]
+  from = "/scanner"
+  to = "/scanner.html"
+  status = 200
+
+[[redirects]]
+  from = "/values"
+  to = "/pricing.html"
+  status = 200
+
+[[redirects]]
+  from = "/grading"
+  to = "/grading.html"
+  status = 200
+
+[[redirects]]
+  from = "/sell"
+  to = "/marketplace.html"
+  status = 200
+
+[[redirects]]
+  from = "/assistant"
+  to = "/assistant.html"
+  status = 200

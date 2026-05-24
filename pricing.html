@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Values | CardCortex</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="pricing">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a>
+        </nav>
+        <a class="nav-cta" href="./marketplace.html">Sell route</a>
+      </header>
+      <main class="app-page">
+        <section class="page-heading">
+          <div>
+            <h1>Value intelligence</h1>
+            <p>Compare raw value, graded value, sold comps, active marketplace spread, and collection exposure.</p>
+          </div>
+          <div class="value-tile"><small>Projected graded upside</small><strong id="upsideValue">$0</strong></div>
+        </section>
+        <section id="valueRows" class="value-table"></section>
+      </main>
+    </div>
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

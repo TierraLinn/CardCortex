@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vault | CardCortex</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="vault">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a>
+        </nav>
+        <a class="nav-cta" href="./scanner.html">Scan a card</a>
+      </header>
+      <main class="app-page">
+        <section class="page-heading">
+          <div>
+            <h1>Collection vault</h1>
+            <p>Track every card, every category, every storage location, and the live estimated value of your whole collection.</p>
+          </div>
+          <div class="value-tile">
+            <small>Total collection value</small>
+            <strong id="vaultTotal">$0</strong>
+          </div>
+        </section>
+        <section class="controls">
+          <input id="vaultSearch" type="search" placeholder="Search card, set, category, storage..." />
+          <select id="categoryFilter"></select>
+          <select id="sortSelect">
+            <option value="value">Sort by value</option>
+            <option value="grade">Sort by AI grade</option>
+            <option value="name">Sort by name</option>
+          </select>
+        </section>
+        <section id="categoryStats" class="stat-grid"></section>
+        <section id="cardGrid" class="card-grid"></section>
+      </main>
+    </div>
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

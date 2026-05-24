@@ -1,0 +1,10 @@
+{
+  "name": "cardcortex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node static-server.cjs",
+    "check": "node --check data.js && node --check app.js && node --check static-server.cjs"
+  }
+}
