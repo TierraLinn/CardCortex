@@ -19,41 +19,36 @@
           <a href="./pricing.html">Values</a>
           <a href="./grading.html">AI grading</a>
           <a href="./marketplace.html">Sell</a>
+          <a href="./auth.html">Account</a>
         </nav>
         <a class="nav-cta" href="./scanner.html">Scan a card</a>
       </header>
 
       <main>
-        <section class="hero cortex-field">
+        <section class="hero cortex-field next-hero">
+          <canvas id="cortexCanvas" aria-label="Interactive 3D trading card constellation"></canvas>
+          <div class="hero-aurora" aria-hidden="true"></div>
           <div class="hero-copy">
-            <h1>The collector brain for every trading card you own.</h1>
+            <h1>The living vault for every card universe you own.</h1>
             <p>
-              CardCortex stores every card, scans new cards through your camera, compares value signals, estimates AI condition grades, and prepares trusted selling routes from one cinematic vault.
+              From shoebox to smart portfolio: every scan becomes condition insight, market intelligence, and a sell-ready strategy inside one living collector universe.
             </p>
             <div class="hero-actions">
               <a class="primary-button" href="./scanner.html">Open scanner</a>
-              <a class="secondary-button" href="./vault.html">View vault</a>
+              <a class="secondary-button glass-button" href="./vault.html">Enter vault</a>
             </div>
           </div>
-          <div class="hero-stage" aria-label="Animated trading card intelligence map">
-            <div class="orbit orbit-one"></div>
-            <div class="orbit orbit-two"></div>
-            <article class="hero-card holo-card">
-              <span>Charizard</span>
-              <strong>$438</strong>
-              <small>PSA 9 signal rising</small>
-            </article>
-            <article class="hero-card hero-card-two holo-card">
-              <span>Spider-Man</span>
-              <strong>$126</strong>
-              <small>Marvel chase watch</small>
-            </article>
-            <article class="hero-card hero-card-three holo-card">
-              <span>MTG Mythic</span>
-              <strong>$72</strong>
-              <small>TCGPlayer + eBay spread</small>
-            </article>
-            <div class="scanner-beam"></div>
+          <aside class="hero-intel" aria-label="Live card intelligence">
+            <span>Live hover signal</span>
+            <strong id="heroIntelName">CardCortex orbit</strong>
+            <p id="heroIntelMeta">Move your cursor through the card field.</p>
+            <div class="intel-meter"><i id="heroIntelMeter"></i></div>
+          </aside>
+          <div class="hero-dock" aria-label="Landing page feature shortcuts">
+            <a href="./scanner.html"><strong>Scan</strong><span>camera + upload</span></a>
+            <a href="./grading.html"><strong>Grade</strong><span>AI condition lab</span></a>
+            <a href="./pricing.html"><strong>Value</strong><span>market signal spread</span></a>
+            <a href="./marketplace.html"><strong>Sell</strong><span>route planner</span></a>
           </div>
         </section>
 
@@ -126,6 +121,7 @@
       </main>
     </div>
     <script src="./data.js"></script>
+    <script type="module" src="./hero3d.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

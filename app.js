@@ -1,4 +1,9 @@
-const { cards, marketplaces } = window.CardCortexData;
+const seedCards = window.CardCortexData.cards;
+const { marketplaces } = window.CardCortexData;
+let cards = [...seedCards];
+let activeVaultRender = null;
+let lastScanCard = null;
+let lastScanImageUrl = "";
 const page = document.body.dataset.page;
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
@@ -28,11 +33,14 @@ function renderVault() {
   const search = document.querySelector("#vaultSearch");
   const filter = document.querySelector("#categoryFilter");
   const sort = document.querySelector("#sortSelect");
-  const categories = ["All categories", ...new Set(cards.map((card) => card.category))];
-  filter.innerHTML = categories.map((category) => `<option value="${category}">${category}</option>`).join("");
+  const quickAddForm = document.querySelector("#quickAddForm");
+  const vaultMode = document.querySelector("#vaultMode");
   const rerender = () => {
+    const categories = ["All categories", ...new Set(cards.map((card) => card.category))];
+    const currentFilter = filter.value || "All categories";
+    filter.innerHTML = categories.map((category) => `<option value="${category}" ${category === currentFilter ? "selected" : ""}>${category}</option>`).join("");
     const query = search.value.toLowerCase();
-    const category = filter.value;
+    const category = filter.value || "All categories";
     const sorted = cards
       .filter((card) => category === "All categories" || card.category === category)
       .filter((card) => `${card.name} ${card.category} ${card.set} ${card.storage}`.toLowerCase().includes(query))
@@ -41,8 +49,72 @@ function renderVault() {
     document.querySelector("#cardGrid").innerHTML = sorted.map(cardTile).join("");
     renderStats(sorted);
   };
+  activeVaultRender = rerender;
   [search, filter, sort].forEach((el) => el.addEventListener("input", rerender));
+  quickAddForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const api = window.CardCortexSupabase;
+    if (!api || !(await api.getUser())) {
+      vaultMode.textContent = "Sign in on the Account page before saving real cards.";
+      return;
+    }
+    vaultMode.textContent = "Saving card...";
+    await api.createCard({
+      name: document.querySelector("#quickName").value.trim(),
+      category: document.querySelector("#quickCategory").value.trim(),
+      set_name: "Manual entry",
+      raw_value: Number(document.querySelector("#quickValue").value || 0),
+      graded_value: Number(document.querySelector("#quickValue").value || 0),
+      ai_grade: 0,
+      ai_confidence: 0,
+      storage_location: "Unassigned",
+    });
+    quickAddForm.reset();
+    await loadSupabaseCards(vaultMode);
+    rerender();
+  });
+  loadSupabaseCards(vaultMode).then(rerender);
   rerender();
+}
+
+async function loadSupabaseCards(statusEl) {
+  const api = window.CardCortexSupabase;
+  if (!api) return;
+  const user = await api.getUser();
+  if (!user) {
+    if (statusEl) statusEl.textContent = "Sign in to save cards to Supabase. Demo cards are shown until your account has saved cards.";
+    return;
+  }
+  try {
+    const rows = await api.listCards();
+    if (rows.length) {
+      cards = rows.map(dbCardToCard);
+      if (statusEl) statusEl.textContent = `Signed in as ${user.email}. Showing ${rows.length} saved card${rows.length === 1 ? "" : "s"}.`;
+    } else {
+      if (statusEl) statusEl.textContent = `Signed in as ${user.email}. Your real vault is empty, so demo cards are still shown.`;
+    }
+  } catch (error) {
+    if (statusEl) statusEl.textContent = `Supabase setup needed: ${error.message}`;
+  }
+}
+
+function dbCardToCard(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    set: row.set_name || "Saved card",
+    number: row.card_number || "",
+    rarity: row.rarity || "Unspecified",
+    storage: row.storage_location || "Unassigned",
+    rawValue: Number(row.raw_value || 0),
+    gradedValue: Number(row.graded_value || row.raw_value || 0),
+    grade: Number(row.ai_grade || 0),
+    confidence: Number(row.ai_confidence || 0),
+    sources: { Saved: Number(row.raw_value || 0), AI: Number(row.graded_value || row.raw_value || 0) },
+    color: "#14b8a6",
+    imageUrl: row.image_url || "",
+  };
 }
 
 function renderStats(items) {
@@ -88,19 +160,60 @@ function initScanner() {
   document.querySelector("#captureButton").addEventListener("click", () => simulateScan(result, status));
   document.querySelector("#uploadInput").addEventListener("change", (event) => {
     if (!event.target.files?.length) return;
+    const file = event.target.files[0];
     const image = new Image();
-    image.onload = () => {
+    image.onload = async () => {
       canvas.width = image.width;
       canvas.height = image.height;
       canvas.getContext("2d").drawImage(image, 0, 0);
+      const api = window.CardCortexSupabase;
+      lastScanImageUrl = "";
+      if (api && (await api.getUser())) {
+        status.textContent = "Uploading card image to your Supabase vault...";
+        try {
+          lastScanImageUrl = await api.uploadCardImage(file);
+        } catch (error) {
+          status.textContent = `Image upload needs Supabase storage setup: ${error.message}`;
+        }
+      }
       simulateScan(result, status);
     };
-    image.src = URL.createObjectURL(event.target.files[0]);
+    image.src = URL.createObjectURL(file);
+  });
+
+  document.addEventListener("click", async (event) => {
+    if (!event.target.matches("#saveScanButton")) return;
+    const api = window.CardCortexSupabase;
+    if (!api || !(await api.getUser())) {
+      status.textContent = "Sign in on the Account page before saving scans.";
+      return;
+    }
+    if (!lastScanCard) return;
+    status.textContent = "Saving scan to your real vault...";
+    try {
+      await api.createCard({
+        name: lastScanCard.name,
+        category: lastScanCard.category,
+        set_name: lastScanCard.set,
+        card_number: lastScanCard.number,
+        rarity: lastScanCard.rarity,
+        storage_location: "Scanned inbox",
+        raw_value: lastScanCard.rawValue,
+        graded_value: lastScanCard.gradedValue,
+        ai_grade: lastScanCard.grade,
+        ai_confidence: lastScanCard.confidence,
+        image_url: lastScanImageUrl,
+      });
+      status.textContent = `${lastScanCard.name} saved to your Supabase vault.`;
+    } catch (error) {
+      status.textContent = `Save failed: ${error.message}`;
+    }
   });
 }
 
 function simulateScan(result, status) {
   const card = cards[Math.floor(Math.random() * cards.length)];
+  lastScanCard = card;
   status.textContent = `AI matched ${card.name} with ${card.confidence}% confidence.`;
   result.innerHTML = `
     <article class="scan-card collection-card" style="--card-accent:${card.color}">
@@ -109,6 +222,7 @@ function simulateScan(result, status) {
         <h3>${card.name}</h3>
         <p>${card.set} · ${card.number} · ${card.rarity}</p>
         <div class="chip-row"><span>Raw ${money.format(card.rawValue)}</span><span>Graded ${money.format(card.gradedValue)}</span><span>AI ${card.grade}</span></div>
+        <button id="saveScanButton" class="primary-button save-scan-button" type="button">Save scan to vault</button>
       </div>
     </article>`;
 }

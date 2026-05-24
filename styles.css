@@ -88,6 +88,167 @@ nav a.active { color: var(--ink); background: rgba(47, 128, 237, 0.1); }
   overflow: hidden;
 }
 .hero-copy, .hero-stage { min-width: 0; }
+
+.next-hero {
+  display: block;
+  min-height: calc(100vh - 116px);
+  padding: clamp(28px, 5vw, 72px);
+  color: #fff;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(124, 92, 255, 0.5), transparent 28rem),
+    radial-gradient(circle at 82% 30%, rgba(20, 184, 166, 0.42), transparent 24rem),
+    radial-gradient(circle at 58% 80%, rgba(237, 37, 78, 0.38), transparent 28rem),
+    #07090f;
+  box-shadow: 0 30px 120px rgba(7, 9, 15, 0.38);
+}
+
+.next-hero::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7, 9, 15, 0.92) 0%, rgba(7, 9, 15, 0.82) 26%, rgba(7, 9, 15, 0.34) 55%, rgba(7, 9, 15, 0.05) 100%),
+    linear-gradient(0deg, rgba(7, 9, 15, 0.62) 0%, transparent 28%);
+}
+
+#cortexCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero-aurora {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 120px),
+    linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 120px),
+    radial-gradient(circle at var(--mx, 50%) var(--my, 40%), rgba(255,255,255,0.18), transparent 18rem);
+  mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.7) 44%, rgba(0,0,0,0.18) 74%, #000 100%);
+  animation: auroraPulse 8s ease-in-out infinite;
+}
+
+.next-hero .hero-copy {
+  position: relative;
+  z-index: 2;
+  width: min(650px, 55vw);
+  padding-top: clamp(32px, 8vh, 96px);
+}
+
+.next-hero h1 {
+  color: #fff;
+  text-shadow: 0 20px 80px rgba(0, 0, 0, 0.45);
+}
+
+.next-hero p {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(1rem, 1.5vw, 1.22rem);
+}
+
+.glass-button {
+  color: #fff;
+  border-color: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.11);
+  backdrop-filter: blur(18px);
+}
+
+.hero-intel {
+  position: absolute;
+  z-index: 3;
+  right: clamp(18px, 4vw, 56px);
+  top: clamp(92px, 14vh, 170px);
+  width: min(330px, calc(100% - 36px));
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  color: #fff;
+  background: rgba(8, 14, 22, 0.52);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.24);
+  backdrop-filter: blur(22px);
+}
+
+.hero-intel span {
+  color: rgba(255,255,255,0.58);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-intel strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 1.35rem;
+}
+
+.hero-intel p {
+  margin: 6px 0 14px;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.45;
+}
+
+.intel-meter {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+}
+
+.intel-meter i {
+  display: block;
+  width: 58%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--pink), var(--amber), var(--green), #76f7ff);
+  transition: width 180ms ease;
+}
+
+.hero-dock {
+  position: absolute;
+  z-index: 4;
+  left: clamp(20px, 5vw, 72px);
+  right: clamp(20px, 5vw, 72px);
+  bottom: clamp(18px, 4vh, 38px);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hero-dock a {
+  min-width: 0;
+  padding: 14px;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 8px;
+  color: #fff;
+  background: rgba(255,255,255,0.09);
+  backdrop-filter: blur(18px);
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.hero-dock a:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255,255,255,0.36);
+  background: rgba(255,255,255,0.16);
+}
+
+.hero-dock strong,
+.hero-dock span {
+  display: block;
+}
+
+.hero-dock span {
+  margin-top: 4px;
+  color: rgba(255,255,255,0.64);
+  font-size: 0.82rem;
+}
 .hero h1, .page-heading h1 {
   margin: 0;
   max-width: 940px;
@@ -300,6 +461,71 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 .chat-log .user { justify-self: end; color: #fff; background: var(--ink); }
 .chat-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 12px; }
 
+.save-panel,
+.auth-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 18px 60px rgba(16, 19, 22, 0.08);
+}
+
+.save-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.save-panel h2,
+.auth-card h2 {
+  margin: 0 0 8px;
+}
+
+.save-panel p,
+.auth-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.quick-add-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 10px;
+}
+
+.save-scan-button {
+  width: fit-content;
+  margin-top: 14px;
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+  gap: 16px;
+}
+
+.auth-card {
+  display: grid;
+  gap: 13px;
+  align-content: start;
+}
+
+.auth-card label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.auth-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .legal-page { padding: 34px 0; }
 .legal-copy {
   display: grid;
@@ -319,11 +545,22 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 @keyframes float { 50% { transform: translateY(-16px) rotate(var(--r, 0deg)); } }
 @keyframes scan { 0%,100% { transform: translateY(0); opacity: .35; } 50% { transform: translateY(360px); opacity: 1; } }
 @keyframes drift { to { transform: translateX(-40px); } }
+@keyframes auroraPulse {
+  50% {
+    opacity: 0.64;
+    transform: scale(1.03);
+  }
+}
 
 @media (max-width: 920px) {
   .topbar, .page-heading { align-items: stretch; flex-direction: column; }
   nav { justify-content: flex-start; }
   .hero, .feature-band, .scanner-layout, .grading-lab { grid-template-columns: 1fr; }
+  .save-panel, .auth-grid { grid-template-columns: 1fr; }
+  .quick-add-form { grid-template-columns: 1fr; }
+  .next-hero .hero-copy { width: min(680px, 100%); }
+  .hero-intel { position: relative; inset: auto; margin-top: 28px; }
+  .hero-dock { position: relative; left: auto; right: auto; bottom: auto; margin-top: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-stage { min-height: 480px; }
   .workflow-strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .controls, .value-row { grid-template-columns: 1fr; }
@@ -336,7 +573,9 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   nav a { justify-content: center; }
   .nav-cta { width: 100%; }
   .hero { padding: 30px 0; min-height: auto; width: 100%; }
+  .next-hero { min-height: 890px; padding: 22px; }
   .hero-copy { width: min(100%, 340px); }
+  .next-hero .hero-copy { width: 100%; padding-top: 18px; }
   .hero h1, .page-heading h1 {
     max-width: 100%;
     overflow-wrap: break-word;
@@ -347,6 +586,8 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   .hero-actions { align-items: stretch; flex-direction: column; }
   .primary-button, .secondary-button, .upload-button { width: 100%; }
   .hero-stage { min-height: 390px; }
+  .hero-dock { grid-template-columns: 1fr; }
+  .hero-intel { width: 100%; }
   .hero-card { width: 168px; min-height: 232px; }
   .hero-card strong { margin-top: 72px; font-size: 2rem; }
   .feature-grid, .workflow-strip { grid-template-columns: 1fr; }
