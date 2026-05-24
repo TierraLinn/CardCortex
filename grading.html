@@ -29,11 +29,27 @@
             <strong id="gradeScore">9.1</strong>
             <small>AI confidence 88%</small>
           </div>
-          <div id="gradeBreakdown" class="grade-breakdown"></div>
+          <div>
+            <section class="grade-photo-lab">
+              <h2>Digital grading photos</h2>
+              <p>Upload or take front, back, corner, and surface photos. The current lab produces a pre-grade estimate and photo completeness score.</p>
+              <div class="photo-slots">
+                <label><span>Front photo</span><input data-grade-photo="front" type="file" accept="image/*" capture="environment" /></label>
+                <label><span>Back photo</span><input data-grade-photo="back" type="file" accept="image/*" capture="environment" /></label>
+                <label><span>Top corners</span><input data-grade-photo="corners" type="file" accept="image/*" capture="environment" /></label>
+                <label><span>Surface glare</span><input data-grade-photo="surface" type="file" accept="image/*" capture="environment" /></label>
+              </div>
+              <div id="gradePhotoPreview" class="grade-photo-preview"></div>
+              <button id="runGradeButton" class="primary-button" type="button">Run AI pre-grade</button>
+              <p id="gradePhotoStatus">Waiting for grading photos.</p>
+            </section>
+            <div id="gradeBreakdown" class="grade-breakdown"></div>
+          </div>
         </section>
       </main>
     </div>
     <script src="./data.js"></script>
+    <script type="module" src="./page3d.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

@@ -40,6 +40,23 @@
       if (error) throw error;
       return data;
     },
+    async updateCard(id, updates) {
+      const { data, error } = await client
+        .from("cards")
+        .update(updates)
+        .eq("id", id)
+        .select("*")
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    async deleteCard(id) {
+      const { error } = await client
+        .from("cards")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
     async uploadCardImage(file) {
       const user = await this.getUser();
       if (!user) throw new Error("Sign in before uploading card images.");

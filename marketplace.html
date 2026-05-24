@@ -23,9 +23,21 @@
           </div>
         </section>
         <section id="marketRoutes" class="market-grid"></section>
+        <section class="listing-studio">
+          <h2>Listing studio</h2>
+          <p>Create polished listing copy from your card details, value range, condition notes, and recommended marketplace route.</p>
+          <form id="listingForm" class="listing-form">
+            <input id="listingCardName" type="text" placeholder="Card name" />
+            <input id="listingCondition" type="text" placeholder="Condition notes" />
+            <input id="listingPrice" type="number" min="0" step="1" placeholder="Target price" />
+            <button class="primary-button" type="submit">Generate listing</button>
+          </form>
+          <textarea id="listingOutput" readonly placeholder="Generated listing copy will appear here."></textarea>
+        </section>
       </main>
     </div>
     <script src="./data.js"></script>
+    <script type="module" src="./page3d.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

@@ -73,6 +73,17 @@ function renderVault() {
     await loadSupabaseCards(vaultMode);
     rerender();
   });
+  document.querySelector("#cardGrid").addEventListener("click", async (event) => {
+    const manage = event.target.closest("[data-manage-card]");
+    const remove = event.target.closest("[data-delete-card]");
+    if (manage) {
+      openVaultEditor(manage.dataset.manageCard);
+      return;
+    }
+    if (remove) {
+      await deleteVaultCard(remove.dataset.deleteCard);
+    }
+  });
   loadSupabaseCards(vaultMode).then(rerender);
   rerender();
 }
@@ -114,7 +125,58 @@ function dbCardToCard(row) {
     sources: { Saved: Number(row.raw_value || 0), AI: Number(row.graded_value || row.raw_value || 0) },
     color: "#14b8a6",
     imageUrl: row.image_url || "",
+    saved: true,
   };
+}
+
+function openVaultEditor(id) {
+  const card = cards.find((item) => item.id === id);
+  const editor = document.querySelector("#vaultEditor");
+  if (!card || !editor) return;
+  editor.hidden = false;
+  editor.innerHTML = `
+    <div>
+      <h2>Manage card</h2>
+      <p>Edit your saved vault record. Changes update Supabase.</p>
+    </div>
+    <form id="vaultEditForm" class="quick-add-form">
+      <input id="editName" type="text" value="${escapeAttribute(card.name)}" required />
+      <input id="editCategory" type="text" value="${escapeAttribute(card.category)}" required />
+      <input id="editValue" type="number" min="0" step="1" value="${Number(card.rawValue || 0)}" required />
+      <button class="primary-button" type="submit">Update card</button>
+    </form>
+  `;
+  document.querySelector("#vaultEditForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const api = window.CardCortexSupabase;
+    if (!api) return;
+    await api.updateCard(id, {
+      name: document.querySelector("#editName").value.trim(),
+      category: document.querySelector("#editCategory").value.trim(),
+      raw_value: Number(document.querySelector("#editValue").value || 0),
+      updated_at: new Date().toISOString(),
+    });
+    editor.hidden = true;
+    await loadSupabaseCards(document.querySelector("#vaultMode"));
+    activeVaultRender?.();
+  });
+  editor.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function deleteVaultCard(id) {
+  const api = window.CardCortexSupabase;
+  const status = document.querySelector("#vaultMode");
+  if (!api || !(await api.getUser())) {
+    status.textContent = "Sign in before deleting saved cards.";
+    return;
+  }
+  const card = cards.find((item) => item.id === id);
+  const ok = window.confirm(`Delete ${card?.name || "this card"} from your vault?`);
+  if (!ok) return;
+  await api.deleteCard(id);
+  status.textContent = "Card deleted from your vault.";
+  await loadSupabaseCards(status);
+  activeVaultRender?.();
 }
 
 function renderStats(items) {
@@ -126,6 +188,14 @@ function renderStats(items) {
     .sort((a, b) => b[1] - a[1])
     .map(([category, value]) => `<article><small>${category}</small><strong>${money.format(value)}</strong></article>`)
     .join("");
+  const top = [...items].sort((a, b) => b.rawValue - a.rawValue)[0];
+  const upside = items.reduce((sum, card) => sum + Math.max(0, (card.gradedValue || 0) - (card.rawValue || 0)), 0);
+  const pulse = document.querySelector("#portfolioPulse");
+  const next = document.querySelector("#nextMove");
+  const insurance = document.querySelector("#insuranceSnapshot");
+  if (pulse) pulse.textContent = `${items.length} tracked cards across ${Object.keys(grouped).length} categories with ${money.format(totalValue(items))} current raw value.`;
+  if (next) next.textContent = top ? `Focus on ${top.name}; it carries the highest current value signal at ${money.format(top.rawValue)}.` : "Add cards to unlock recommendations.";
+  if (insurance) insurance.textContent = `Insurance snapshot estimate: ${money.format(totalValue(items))}. Potential graded upside: ${money.format(upside)}.`;
 }
 
 function cardTile(card) {
@@ -137,7 +207,10 @@ function cardTile(card) {
         <p>${card.set} · ${card.number} · ${card.rarity}</p>
         <div class="chip-row"><span>${card.category}</span><span>${card.storage}</span><span>AI ${card.grade}</span></div>
       </div>
-      <strong>${money.format(card.rawValue)}</strong>
+      <div class="card-actions">
+        <strong>${money.format(card.rawValue)}</strong>
+        ${card.saved ? `<button class="secondary-button tiny-button" data-manage-card="${card.id}" type="button">Manage</button><button class="danger-button tiny-button" data-delete-card="${card.id}" type="button">Delete</button>` : ""}
+      </div>
     </article>`;
 }
 
@@ -281,6 +354,67 @@ function renderPricing() {
       </article>`;
     })
     .join("");
+  initTcgLookup();
+}
+
+function initTcgLookup() {
+  const form = document.querySelector("#tcgLookupForm");
+  if (!form || form.dataset.ready) return;
+  form.dataset.ready = "true";
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const query = document.querySelector("#tcgLookupInput").value.trim();
+    const results = document.querySelector("#tcgLookupResults");
+    if (!query) return;
+    results.innerHTML = `<div class="ai-panel">Searching Pokémon TCG API for "${escapeHtml(query)}"...</div>`;
+    try {
+      const found = await searchPokemonTcg(query);
+      if (!found.length) {
+        results.innerHTML = `<div class="empty-state">No Pokémon TCG API matches found. Try a simpler name.</div>`;
+        return;
+      }
+      results.innerHTML = found.map(tcgResultCard).join("");
+    } catch (error) {
+      results.innerHTML = `<div class="empty-state">Lookup failed: ${escapeHtml(error.message)}</div>`;
+    }
+  });
+}
+
+async function searchPokemonTcg(query) {
+  const params = new URLSearchParams({
+    q: `name:"${query.replace(/"/g, "")}"`,
+    pageSize: "8",
+    orderBy: "-set.releaseDate",
+  });
+  const response = await fetch(`https://api.pokemontcg.io/v2/cards?${params.toString()}`);
+  if (!response.ok) throw new Error(`Source returned ${response.status}`);
+  const payload = await response.json();
+  return payload.data || [];
+}
+
+function tcgResultCard(card) {
+  const prices = card.tcgplayer?.prices || {};
+  const priceRows = Object.entries(prices)
+    .flatMap(([variant, values]) => Object.entries(values || {}).map(([label, value]) => ({ variant, label, value })))
+    .filter((row) => typeof row.value === "number");
+  const best = priceRows.find((row) => row.label === "market") || priceRows[0];
+  return `
+    <article class="tcg-result">
+      <img src="${card.images?.small || ""}" alt="${escapeAttribute(card.name)}" />
+      <div>
+        <h3>${escapeHtml(card.name)}</h3>
+        <p>${escapeHtml(card.set?.name || "Unknown set")} · ${escapeHtml(card.number || "")} · ${escapeHtml(card.rarity || "Unknown rarity")}</p>
+        <div class="chip-row">
+          <span>Source: Pokémon TCG API</span>
+          <span>TCGPlayer ${best ? money.format(best.value) : "n/a"}</span>
+        </div>
+        <div class="source-list">
+          ${priceRows.slice(0, 8).map((row) => `<span>${escapeHtml(row.variant)} ${escapeHtml(row.label)}: <strong>${money.format(row.value)}</strong></span>`).join("") || "<span>No price fields available for this card.</span>"}
+        </div>
+        ${card.tcgplayer?.url ? `<a class="secondary-button tiny-link" href="${card.tcgplayer.url}" target="_blank" rel="noreferrer">Open TCGPlayer source</a>` : ""}
+      </div>
+    </article>
+  `;
 }
 
 function renderGrading() {
@@ -301,6 +435,45 @@ function renderGrading() {
       <div><strong>${label}</strong><span>${score}%</span></div>
       <b><i style="width:${score}%"></i></b>
     </article>`).join("");
+  initGradePhotoLab(metrics);
+}
+
+function initGradePhotoLab(baseMetrics) {
+  const inputs = document.querySelectorAll("[data-grade-photo]");
+  const preview = document.querySelector("#gradePhotoPreview");
+  const status = document.querySelector("#gradePhotoStatus");
+  const uploaded = new Map();
+  inputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      uploaded.set(input.dataset.gradePhoto, URL.createObjectURL(file));
+      preview.innerHTML = [...uploaded.entries()].map(([label, url]) => `<figure><img src="${url}" alt="${label} card view" /><figcaption>${label}</figcaption></figure>`).join("");
+      status.textContent = `${uploaded.size} grading photo${uploaded.size === 1 ? "" : "s"} ready.`;
+    });
+  });
+  document.querySelector("#runGradeButton")?.addEventListener("click", () => {
+    const completeness = uploaded.size / 4;
+    const adjustment = Math.round(completeness * 9);
+    const metrics = baseMetrics.map(([label, score], index) => [label, Math.min(98, score + adjustment - (index % 3))]);
+    document.querySelector("#gradeBreakdown").innerHTML = metrics.map(([label, score]) => `
+      <article>
+        <div><strong>${label}</strong><span>${score}%</span></div>
+        <b><i style="width:${score}%"></i></b>
+      </article>`).join("");
+    const grade = (7.2 + completeness * 2.5).toFixed(1);
+    document.querySelector("#gradeScore").textContent = grade;
+    status.textContent = completeness === 1
+      ? "AI pre-grade complete with front, back, corners, and surface photos."
+      : "AI pre-grade complete, but more photo angles will improve confidence.";
+  });
+}
+
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>"']/g, (char) => {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+    return map[char];
+  });
 }
 
 function renderMarketplace() {
@@ -316,6 +489,19 @@ function renderMarketplace() {
       button.textContent = "Listing draft prepared";
       button.classList.add("prepared");
     });
+  });
+  initListingStudio();
+}
+
+function initListingStudio() {
+  const form = document.querySelector("#listingForm");
+  if (!form) return;
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const name = document.querySelector("#listingCardName").value.trim() || "Trading card";
+    const condition = document.querySelector("#listingCondition").value.trim() || "reviewed condition with clear front and back photos";
+    const price = Number(document.querySelector("#listingPrice").value || 0);
+    document.querySelector("#listingOutput").value = `${name} - CardCortex listing draft\n\nCondition: ${condition}.\nTarget price: ${price ? money.format(price) : "set after reviewing comps"}.\n\nInclude front photo, back photo, corner inspection, surface/glare notes, storage history, and CardCortex pre-grade notes.\n\nRecommended strategy: honest condition-first title, sold-comps price range, clear shipping terms, and no official grading claim unless the card is graded by a recognized grading company.`;
   });
 }
 
@@ -334,6 +520,12 @@ function initAssistant() {
       ? "For selling, start with high-liquidity cards on eBay or TCGPlayer-style markets, then route niche Marvel, Bakugan, and Buddyfight cards to collector communities."
       : "I would scan front and back photos, verify set number, compare sold comps, estimate condition, and decide whether grading raises the expected return.";
     setTimeout(() => addMessage("assistant", answer), 350);
+  });
+  document.querySelectorAll(".prompt-rail button").forEach((button) => {
+    button.addEventListener("click", () => {
+      input.value = button.textContent;
+      form.requestSubmit();
+    });
   });
   function addMessage(role, text) {
     log.insertAdjacentHTML("beforeend", `<article class="${role}">${text}</article>`);

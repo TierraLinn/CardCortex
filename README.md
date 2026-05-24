@@ -30,3 +30,12 @@ http://localhost:4192/index.html
 ## Deploy
 
 See `DEPLOYMENT-LAUNCH.md`.
+
+## Real intelligence engine
+
+Run these SQL files in Supabase:
+
+1. `SUPABASE-SCHEMA.sql`
+2. `SUPABASE-INTELLIGENCE-SCHEMA.sql`
+
+The second file adds catalog, price snapshot, scan job, and detailed grading report tables. Daily automatic updates require Supabase Cron plus Edge Functions or another backend scheduler; GitHub Pages alone cannot run daily import jobs.

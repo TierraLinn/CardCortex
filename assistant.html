@@ -23,6 +23,12 @@
           </div>
         </section>
         <section class="chat-shell">
+          <div class="prompt-rail" aria-label="Suggested AI prompts">
+            <button type="button">Which cards should I grade first?</button>
+            <button type="button">What should I sell now?</button>
+            <button type="button">How do I organize my vault?</button>
+            <button type="button">Create an insurance report plan.</button>
+          </div>
           <div id="chatLog" class="chat-log"></div>
           <form id="chatForm" class="chat-form">
             <input id="chatInput" type="text" placeholder="Ask CardCortex what to do with your cards..." />
@@ -32,6 +38,7 @@
       </main>
     </div>
     <script src="./data.js"></script>
+    <script type="module" src="./page3d.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

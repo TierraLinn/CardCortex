@@ -23,10 +23,22 @@
           </div>
           <div class="value-tile"><small>Projected graded upside</small><strong id="upsideValue">$0</strong></div>
         </section>
+        <section class="lookup-panel">
+          <div>
+            <h2>TCG card lookup</h2>
+            <p>Search Pokémon cards through the Pokémon TCG API and pull available TCGPlayer price fields into CardCortex.</p>
+          </div>
+          <form id="tcgLookupForm" class="lookup-form">
+            <input id="tcgLookupInput" type="search" placeholder="Search Pokemon card name, like Charizard" />
+            <button class="primary-button" type="submit">Lookup values</button>
+          </form>
+        </section>
+        <section id="tcgLookupResults" class="lookup-results"></section>
         <section id="valueRows" class="value-table"></section>
       </main>
     </div>
     <script src="./data.js"></script>
+    <script type="module" src="./page3d.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>
