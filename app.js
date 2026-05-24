@@ -188,23 +188,17 @@ function initScanner() {
       status.textContent = "Sign in on the Account page before saving scans.";
       return;
     }
-    if (!lastScanCard) return;
+    if (!lastScanCard) {
+      status.textContent = "Capture or upload a card before saving.";
+      return;
+    }
     status.textContent = "Saving scan to your real vault...";
     try {
-      await api.createCard({
-        name: lastScanCard.name,
-        category: lastScanCard.category,
-        set_name: lastScanCard.set,
-        card_number: lastScanCard.number,
-        rarity: lastScanCard.rarity,
-        storage_location: "Scanned inbox",
-        raw_value: lastScanCard.rawValue,
-        graded_value: lastScanCard.gradedValue,
-        ai_grade: lastScanCard.grade,
-        ai_confidence: lastScanCard.confidence,
-        image_url: lastScanImageUrl,
-      });
-      status.textContent = `${lastScanCard.name} saved to your Supabase vault.`;
+      const payload = readScanReviewForm();
+      await api.createCard(payload);
+      status.textContent = `${payload.name} saved to your Supabase vault. Open Vault to see it.`;
+      event.target.textContent = "Saved to vault";
+      event.target.disabled = true;
     } catch (error) {
       status.textContent = `Save failed: ${error.message}`;
     }
@@ -213,18 +207,59 @@ function initScanner() {
 
 function simulateScan(result, status) {
   const card = cards[Math.floor(Math.random() * cards.length)];
-  lastScanCard = card;
-  status.textContent = `AI matched ${card.name} with ${card.confidence}% confidence.`;
+  lastScanCard = { ...card };
+  status.textContent = `AI made a best guess: ${card.name}. Review and correct it before saving.`;
   result.innerHTML = `
-    <article class="scan-card collection-card" style="--card-accent:${card.color}">
-      <div class="mini-card holo-card"><span>${card.category}</span><strong>${card.name.slice(0, 2).toUpperCase()}</strong></div>
-      <div>
-        <h3>${card.name}</h3>
-        <p>${card.set} · ${card.number} · ${card.rarity}</p>
-        <div class="chip-row"><span>Raw ${money.format(card.rawValue)}</span><span>Graded ${money.format(card.gradedValue)}</span><span>AI ${card.grade}</span></div>
-        <button id="saveScanButton" class="primary-button save-scan-button" type="button">Save scan to vault</button>
+    <article class="scan-review">
+      <div class="scan-review-card" style="--card-accent:${card.color}">
+        <div class="mini-card holo-card"><span>${card.category}</span><strong>${card.name.slice(0, 2).toUpperCase()}</strong></div>
+        <div>
+          <h2>Review AI guess</h2>
+          <p>Correct anything that is wrong. CardCortex saves your reviewed version, not the raw guess.</p>
+        </div>
+      </div>
+      <form id="scanReviewForm" class="scan-review-form">
+        <label>Card name<input id="scanName" type="text" value="${escapeAttribute(card.name)}" required /></label>
+        <label>Category<input id="scanCategory" type="text" value="${escapeAttribute(card.category)}" required /></label>
+        <label>Set<input id="scanSet" type="text" value="${escapeAttribute(card.set)}" /></label>
+        <label>Card number<input id="scanNumber" type="text" value="${escapeAttribute(card.number)}" /></label>
+        <label>Rarity<input id="scanRarity" type="text" value="${escapeAttribute(card.rarity)}" /></label>
+        <label>Storage location<input id="scanStorage" type="text" value="Scanned inbox" /></label>
+        <label>Raw value<input id="scanRawValue" type="number" min="0" step="1" value="${Number(card.rawValue || 0)}" /></label>
+        <label>Graded value<input id="scanGradedValue" type="number" min="0" step="1" value="${Number(card.gradedValue || card.rawValue || 0)}" /></label>
+        <label>AI grade<input id="scanGrade" type="number" min="0" max="10" step="0.1" value="${Number(card.grade || 0)}" /></label>
+        <label>AI confidence<input id="scanConfidence" type="number" min="0" max="100" step="1" value="${Number(card.confidence || 0)}" /></label>
+      </form>
+      <div class="scan-review-actions">
+        <button id="saveScanButton" class="primary-button save-scan-button" type="button">Save reviewed card to vault</button>
+        <button id="newGuessButton" class="secondary-button" type="button">Try another AI guess</button>
       </div>
     </article>`;
+
+  document.querySelector("#newGuessButton")?.addEventListener("click", () => simulateScan(result, status));
+}
+
+function readScanReviewForm() {
+  return {
+    name: document.querySelector("#scanName").value.trim(),
+    category: document.querySelector("#scanCategory").value.trim(),
+    set_name: document.querySelector("#scanSet").value.trim(),
+    card_number: document.querySelector("#scanNumber").value.trim(),
+    rarity: document.querySelector("#scanRarity").value.trim(),
+    storage_location: document.querySelector("#scanStorage").value.trim() || "Scanned inbox",
+    raw_value: Number(document.querySelector("#scanRawValue").value || 0),
+    graded_value: Number(document.querySelector("#scanGradedValue").value || 0),
+    ai_grade: Number(document.querySelector("#scanGrade").value || 0),
+    ai_confidence: Number(document.querySelector("#scanConfidence").value || 0),
+    image_url: lastScanImageUrl,
+  };
+}
+
+function escapeAttribute(value) {
+  return String(value || "").replace(/[&<>"']/g, (char) => {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+    return map[char];
+  });
 }
 
 function renderPricing() {
