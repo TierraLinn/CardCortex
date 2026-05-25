@@ -633,52 +633,320 @@ function renderGrading() {
   const card = cards[0];
   document.querySelector("#certNumber").textContent = `CC-${new Date().getFullYear()}-${card.id.toUpperCase().slice(0, 8)}`;
   const metrics = [
-    ["Centering", 91],
-    ["Corners", 88],
-    ["Edges", 86],
-    ["Surface", 92],
-    ["Print alignment", 89],
-    ["Color integrity", 94],
-    ["Glare risk", 73],
-    ["Photo confidence", card.confidence],
+    ["Centering", 0],
+    ["Corners", 0],
+    ["Edges", 0],
+    ["Surface", 0],
+    ["Print quality", 0],
+    ["Back whitening", 0],
+    ["Focus and lighting", 0],
+    ["AI confidence", 0],
   ];
-  document.querySelector("#gradeBreakdown").innerHTML = metrics.map(([label, score]) => `
-    <article>
-      <div><strong>${label}</strong><span>${score}%</span></div>
-      <b><i style="width:${score}%"></i></b>
-    </article>`).join("");
-  initGradePhotoLab(metrics);
+  renderGradeMetrics(metrics);
+  initGradePhotoLab();
 }
 
-function initGradePhotoLab(baseMetrics) {
+function renderGradeMetrics(metrics) {
+  document.querySelector("#gradeBreakdown").innerHTML = metrics.map(([label, score]) => `
+    <article>
+      <div><strong>${label}</strong><span>${Math.round(score)}%</span></div>
+      <b><i style="width:${Math.max(0, Math.min(100, score))}%"></i></b>
+    </article>`).join("");
+}
+
+function initGradePhotoLab() {
   const inputs = document.querySelectorAll("[data-grade-photo]");
   const preview = document.querySelector("#gradePhotoPreview");
   const status = document.querySelector("#gradePhotoStatus");
+  const report = document.querySelector("#gradeReport");
   const uploaded = new Map();
   inputs.forEach((input) => {
     input.addEventListener("change", () => {
       const file = input.files?.[0];
       if (!file) return;
-      uploaded.set(input.dataset.gradePhoto, URL.createObjectURL(file));
-      preview.innerHTML = [...uploaded.entries()].map(([label, url]) => `<figure><img src="${url}" alt="${label} card view" /><figcaption>${label}</figcaption></figure>`).join("");
-      status.textContent = `${uploaded.size} grading photo${uploaded.size === 1 ? "" : "s"} ready.`;
+      uploaded.set(input.dataset.gradePhoto, { file, url: URL.createObjectURL(file) });
+      preview.innerHTML = [...uploaded.entries()].map(([label, item]) => `<figure><img src="${item.url}" alt="${label} card view" /><figcaption>${label}</figcaption></figure>`).join("");
+      status.textContent = uploaded.size === 2 ? "Front and back are ready. Run automatic grade." : "Add the back photo to unlock automatic grading.";
     });
   });
-  document.querySelector("#runGradeButton")?.addEventListener("click", () => {
-    const completeness = uploaded.size / 4;
-    const adjustment = Math.round(completeness * 9);
-    const metrics = baseMetrics.map(([label, score], index) => [label, Math.min(98, score + adjustment - (index % 3))]);
-    document.querySelector("#gradeBreakdown").innerHTML = metrics.map(([label, score]) => `
-      <article>
-        <div><strong>${label}</strong><span>${score}%</span></div>
-        <b><i style="width:${score}%"></i></b>
-      </article>`).join("");
-    const grade = (7.2 + completeness * 2.5).toFixed(1);
-    document.querySelector("#gradeScore").textContent = grade;
-    status.textContent = completeness === 1
-      ? "AI pre-grade complete with front, back, corners, and surface photos."
-      : "AI pre-grade complete, but more photo angles will improve confidence.";
+  document.querySelector("#runGradeButton")?.addEventListener("click", async () => {
+    if (!uploaded.has("front") || !uploaded.has("back")) {
+      status.textContent = "Upload both the front and back before running automatic grading.";
+      return;
+    }
+    status.textContent = "Running centering, corners, edges, surface, print, whitening, and photo-quality mechanisms...";
+    try {
+      const front = await analyzeCardImage(uploaded.get("front").file);
+      const back = await analyzeCardImage(uploaded.get("back").file);
+      const result = buildGradeReport(front, back);
+      renderAutomaticGrade(result, report, status);
+    } catch (error) {
+      status.textContent = `Automatic grading failed: ${error.message}`;
+    }
   });
+}
+
+function renderAutomaticGrade(result, report, status) {
+  document.querySelector("#gradeScore").textContent = result.grade.toFixed(1);
+  document.querySelector("#gradeConfidence").textContent = `AI confidence ${Math.round(result.confidence)}%`;
+  document.querySelector("#certNumber").textContent = result.certNumber;
+  renderGradeMetrics(result.metrics);
+  report.hidden = false;
+  report.innerHTML = `
+    <div>
+      <h2>Automatic grading report</h2>
+      <p>${escapeHtml(result.summary)}</p>
+    </div>
+    <div class="grade-report-grid">
+      ${result.notes.map((note) => `<article><strong>${escapeHtml(note.label)}</strong><span>${escapeHtml(note.value)}</span><p>${escapeHtml(note.detail)}</p></article>`).join("")}
+    </div>
+    <div class="grade-flags">
+      ${result.flags.map((flag) => `<span>${escapeHtml(flag)}</span>`).join("")}
+    </div>
+  `;
+  status.textContent = `Automatic grade complete: ${result.grade.toFixed(1)} with ${Math.round(result.confidence)}% confidence.`;
+}
+
+async function analyzeCardImage(file) {
+  const image = await loadImageFromFile(file);
+  const maxWidth = 360;
+  const scale = Math.min(1, maxWidth / image.width);
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  context.drawImage(image, 0, 0, width, height);
+  const pixels = context.getImageData(0, 0, width, height).data;
+  const luminance = new Float32Array(width * height);
+  const saturation = new Float32Array(width * height);
+  let total = 0;
+  let totalSq = 0;
+  let totalSat = 0;
+  for (let index = 0, pixel = 0; index < pixels.length; index += 4, pixel += 1) {
+    const r = pixels[index];
+    const g = pixels[index + 1];
+    const b = pixels[index + 2];
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    luminance[pixel] = lum;
+    saturation[pixel] = max ? (max - min) / max : 0;
+    total += lum;
+    totalSq += lum * lum;
+    totalSat += saturation[pixel];
+  }
+  const count = luminance.length;
+  const brightness = total / count;
+  const contrast = Math.sqrt(Math.max(0, totalSq / count - brightness * brightness));
+  const edge = edgeProfile(luminance, width, height);
+  const box = detectCardBox(edge.map, width, height);
+  const quality = scorePhotoQuality(brightness, contrast, edge.average);
+  const centering = scoreCentering(box, width, height);
+  const corners = scoreCorners(luminance, edge.map, width, height, box);
+  const edges = scoreEdges(luminance, edge.map, width, height, box);
+  const surface = scoreSurface(luminance, edge.map, width, height, box);
+  const print = clamp(72 + contrast * 0.38 + (totalSat / count) * 24 - Math.abs(brightness - 132) * 0.1, 45, 99);
+  const whitening = scoreWhitening(luminance, width, height, box);
+  return { width, height, brightness, contrast, edgeAverage: edge.average, box, quality, centering, corners, edges, surface, print, whitening };
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not read the image."));
+    image.src = URL.createObjectURL(file);
+  });
+}
+
+function edgeProfile(luminance, width, height) {
+  const map = new Float32Array(width * height);
+  let total = 0;
+  let samples = 0;
+  for (let y = 1; y < height - 1; y += 1) {
+    for (let x = 1; x < width - 1; x += 1) {
+      const index = y * width + x;
+      const gx = Math.abs(luminance[index + 1] - luminance[index - 1]);
+      const gy = Math.abs(luminance[index + width] - luminance[index - width]);
+      const value = gx + gy;
+      map[index] = value;
+      total += value;
+      samples += 1;
+    }
+  }
+  return { map, average: total / Math.max(1, samples) };
+}
+
+function detectCardBox(edgeMap, width, height) {
+  const threshold = 26;
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (edgeMap[y * width + x] > threshold) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  if (minX >= maxX || minY >= maxY) {
+    return { x: width * 0.08, y: height * 0.06, right: width * 0.92, bottom: height * 0.94 };
+  }
+  return { x: minX, y: minY, right: maxX, bottom: maxY };
+}
+
+function scorePhotoQuality(brightness, contrast, edgeAverage) {
+  const brightnessScore = 100 - Math.min(55, Math.abs(brightness - 132) * 0.75);
+  const contrastScore = clamp(contrast * 2.4, 45, 100);
+  const focusScore = clamp(edgeAverage * 5.2, 35, 100);
+  return clamp(brightnessScore * 0.3 + contrastScore * 0.25 + focusScore * 0.45, 35, 99);
+}
+
+function scoreCentering(box, width, height) {
+  const left = Math.max(1, box.x);
+  const right = Math.max(1, width - box.right);
+  const top = Math.max(1, box.y);
+  const bottom = Math.max(1, height - box.bottom);
+  const horizontal = Math.min(left, right) / Math.max(left, right);
+  const vertical = Math.min(top, bottom) / Math.max(top, bottom);
+  return {
+    score: clamp(55 + horizontal * 25 + vertical * 20, 45, 99),
+    horizontal: `${Math.round((left / (left + right)) * 100)}/${Math.round((right / (left + right)) * 100)}`,
+    vertical: `${Math.round((top / (top + bottom)) * 100)}/${Math.round((bottom / (top + bottom)) * 100)}`,
+  };
+}
+
+function scoreCorners(luminance, edgeMap, width, height, box) {
+  const size = Math.max(12, Math.round(Math.min(box.right - box.x, box.bottom - box.y) * 0.1));
+  const regions = [
+    sampleRegion(luminance, edgeMap, width, box.x, box.y, size, size),
+    sampleRegion(luminance, edgeMap, width, box.right - size, box.y, size, size),
+    sampleRegion(luminance, edgeMap, width, box.x, box.bottom - size, size, size),
+    sampleRegion(luminance, edgeMap, width, box.right - size, box.bottom - size, size, size),
+  ];
+  const roughness = average(regions.map((region) => region.edge));
+  const brightnessVariance = standardDeviation(regions.map((region) => region.lum));
+  return clamp(98 - roughness * 0.22 - brightnessVariance * 0.18, 45, 99);
+}
+
+function scoreEdges(luminance, edgeMap, width, height, box) {
+  const band = Math.max(8, Math.round(Math.min(width, height) * 0.035));
+  const regions = [
+    sampleRegion(luminance, edgeMap, width, box.x, box.y, box.right - box.x, band),
+    sampleRegion(luminance, edgeMap, width, box.x, box.bottom - band, box.right - box.x, band),
+    sampleRegion(luminance, edgeMap, width, box.x, box.y, band, box.bottom - box.y),
+    sampleRegion(luminance, edgeMap, width, box.right - band, box.y, band, box.bottom - box.y),
+  ];
+  const roughness = average(regions.map((region) => region.edge));
+  const whitening = average(regions.map((region) => region.brightRatio));
+  return clamp(99 - roughness * 0.18 - whitening * 34, 42, 99);
+}
+
+function scoreSurface(luminance, edgeMap, width, height, box) {
+  const insetX = Math.round((box.right - box.x) * 0.16);
+  const insetY = Math.round((box.bottom - box.y) * 0.16);
+  const region = sampleRegion(luminance, edgeMap, width, box.x + insetX, box.y + insetY, box.right - box.x - insetX * 2, box.bottom - box.y - insetY * 2);
+  const glarePenalty = region.brightRatio * 28;
+  const scratchPenalty = region.edge * 0.16;
+  return clamp(99 - glarePenalty - scratchPenalty, 40, 99);
+}
+
+function scoreWhitening(luminance, width, height, box) {
+  const band = Math.max(8, Math.round(Math.min(width, height) * 0.04));
+  const regions = [
+    sampleRegion(luminance, null, width, box.x, box.y, box.right - box.x, band),
+    sampleRegion(luminance, null, width, box.x, box.bottom - band, box.right - box.x, band),
+    sampleRegion(luminance, null, width, box.x, box.y, band, box.bottom - box.y),
+    sampleRegion(luminance, null, width, box.right - band, box.y, band, box.bottom - box.y),
+  ];
+  const whitening = average(regions.map((region) => region.brightRatio));
+  return clamp(99 - whitening * 44, 45, 99);
+}
+
+function sampleRegion(luminance, edgeMap, width, x, y, regionWidth, regionHeight) {
+  const startX = Math.max(0, Math.round(x));
+  const startY = Math.max(0, Math.round(y));
+  const endX = Math.min(width - 1, Math.round(x + regionWidth));
+  const endY = Math.min(Math.floor(luminance.length / width) - 1, Math.round(y + regionHeight));
+  let lum = 0;
+  let edge = 0;
+  let bright = 0;
+  let count = 0;
+  for (let yy = startY; yy <= endY; yy += 1) {
+    for (let xx = startX; xx <= endX; xx += 1) {
+      const index = yy * width + xx;
+      lum += luminance[index];
+      edge += edgeMap ? edgeMap[index] : 0;
+      if (luminance[index] > 214) bright += 1;
+      count += 1;
+    }
+  }
+  return { lum: lum / Math.max(1, count), edge: edge / Math.max(1, count), brightRatio: bright / Math.max(1, count) };
+}
+
+function buildGradeReport(front, back) {
+  const centeringScore = front.centering.score;
+  const corners = average([front.corners, back.corners]);
+  const edges = average([front.edges, back.edges]);
+  const surface = average([front.surface, back.surface]);
+  const print = front.print;
+  const whitening = back.whitening;
+  const photoQuality = average([front.quality, back.quality]);
+  const weighted = centeringScore * 0.18 + corners * 0.18 + edges * 0.18 + surface * 0.18 + print * 0.12 + whitening * 0.1 + photoQuality * 0.06;
+  const grade = clamp(Math.round((weighted / 10) * 10) / 10, 1, 10);
+  const confidence = clamp(photoQuality * 0.68 + Math.min(front.width, back.width) * 0.04 + 18, 40, 97);
+  const metrics = [
+    ["Centering", centeringScore],
+    ["Corners", corners],
+    ["Edges", edges],
+    ["Surface", surface],
+    ["Print quality", print],
+    ["Back whitening", whitening],
+    ["Focus and lighting", photoQuality],
+    ["AI confidence", confidence],
+  ];
+  const flags = [
+    centeringScore < 82 ? "Centering needs review" : "Centering looks balanced",
+    corners < 82 ? "Corner wear detected" : "Corners look clean",
+    edges < 82 ? "Edge roughness detected" : "Edges look consistent",
+    surface < 82 ? "Surface/glare risk detected" : "Surface looks stable",
+    photoQuality < 75 ? "Retake with stronger lighting for higher confidence" : "Photo quality acceptable",
+  ];
+  return {
+    grade,
+    confidence,
+    metrics,
+    certNumber: `CC-AI-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+    summary: `Estimated digital grade ${grade.toFixed(1)} from front/back computer-vision checks. This is a CardCortex AI estimate, not an official third-party slab grade.`,
+    flags,
+    notes: [
+      { label: "Centering", value: `${front.centering.horizontal} H / ${front.centering.vertical} V`, detail: "Measured from detected border balance on the front image." },
+      { label: "Corners", value: `${Math.round(corners)}%`, detail: "Looks for corner roughness, asymmetry, and brightness changes." },
+      { label: "Edges", value: `${Math.round(edges)}%`, detail: "Samples all four border bands for chipping, whitening, and edge noise." },
+      { label: "Surface", value: `${Math.round(surface)}%`, detail: "Checks interior glare, scratch-like contrast, and uneven surface signals." },
+      { label: "Back whitening", value: `${Math.round(whitening)}%`, detail: "Weights bright edge wear from the back photo." },
+      { label: "Photo confidence", value: `${Math.round(confidence)}%`, detail: "Based on focus, contrast, lighting, and image resolution." },
+    ],
+  };
+}
+
+function average(values) {
+  return values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+}
+
+function standardDeviation(values) {
+  const mean = average(values);
+  return Math.sqrt(average(values.map((value) => (value - mean) ** 2)));
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
 }
 
 function escapeHtml(value) {
