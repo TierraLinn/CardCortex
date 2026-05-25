@@ -1,0 +1,4 @@
+project_id = "niqmgpgzffwujvacpgzy"
+
+[functions.sync-pokemon-catalog]
+verify_jwt = false

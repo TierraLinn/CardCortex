@@ -70,5 +70,27 @@
       const { data } = client.storage.from("card-images").getPublicUrl(path);
       return data.publicUrl;
     },
+    async searchCatalog(query) {
+      const clean = String(query || "").trim();
+      if (!clean) return [];
+      const { data, error } = await client
+        .from("card_catalog")
+        .select("*")
+        .or(`name.ilike.%${clean}%,set_name.ilike.%${clean}%,category.ilike.%${clean}%,game_or_sport.ilike.%${clean}%`)
+        .order("last_synced_at", { ascending: false })
+        .limit(12);
+      if (error) throw error;
+      return data || [];
+    },
+    async latestPrices(catalogCardId) {
+      const { data, error } = await client
+        .from("price_snapshots")
+        .select("*")
+        .eq("catalog_card_id", catalogCardId)
+        .order("observed_at", { ascending: false })
+        .limit(12);
+      if (error) throw error;
+      return data || [];
+    },
   };
 })();

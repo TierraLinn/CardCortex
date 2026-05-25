@@ -39,3 +39,5 @@ Run these SQL files in Supabase:
 2. `SUPABASE-INTELLIGENCE-SCHEMA.sql`
 
 The second file adds catalog, price snapshot, scan job, and detailed grading report tables. Daily automatic updates require Supabase Cron plus Edge Functions or another backend scheduler; GitHub Pages alone cannot run daily import jobs.
+
+The first sync function is in `supabase/functions/sync-pokemon-catalog`. Deployment instructions are in `SUPABASE-EDGE-FUNCTION-DEPLOY.md`.

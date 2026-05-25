@@ -355,6 +355,7 @@ function renderPricing() {
     })
     .join("");
   initTcgLookup();
+  initCatalogSearch();
 }
 
 function initTcgLookup() {
@@ -412,6 +413,60 @@ function tcgResultCard(card) {
           ${priceRows.slice(0, 8).map((row) => `<span>${escapeHtml(row.variant)} ${escapeHtml(row.label)}: <strong>${money.format(row.value)}</strong></span>`).join("") || "<span>No price fields available for this card.</span>"}
         </div>
         ${card.tcgplayer?.url ? `<a class="secondary-button tiny-link" href="${card.tcgplayer.url}" target="_blank" rel="noreferrer">Open TCGPlayer source</a>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function initCatalogSearch() {
+  const form = document.querySelector("#catalogSearchForm");
+  if (!form || form.dataset.ready) return;
+  form.dataset.ready = "true";
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const api = window.CardCortexSupabase;
+    const query = document.querySelector("#catalogSearchInput").value.trim();
+    const results = document.querySelector("#catalogResults");
+    if (!api) {
+      results.innerHTML = `<div class="empty-state">Supabase client is not available.</div>`;
+      return;
+    }
+    if (!query) return;
+    results.innerHTML = `<div class="ai-panel">Searching your synced Supabase catalog for "${escapeHtml(query)}"...</div>`;
+    try {
+      const rows = await api.searchCatalog(query);
+      if (!rows.length) {
+        results.innerHTML = `<div class="empty-state">No synced catalog records found yet. Run the sync function for this card or wait for the daily job.</div>`;
+        return;
+      }
+      const cardsWithPrices = await Promise.all(rows.map(async (row) => ({
+        row,
+        prices: await api.latestPrices(row.id),
+      })));
+      results.innerHTML = cardsWithPrices.map(catalogResultCard).join("");
+    } catch (error) {
+      results.innerHTML = `<div class="empty-state">Catalog search failed: ${escapeHtml(error.message)}</div>`;
+    }
+  });
+}
+
+function catalogResultCard({ row, prices }) {
+  const latest = prices[0];
+  return `
+    <article class="tcg-result catalog-result">
+      <img src="${row.image_url || ""}" alt="${escapeAttribute(row.name)}" />
+      <div>
+        <h3>${escapeHtml(row.name)}</h3>
+        <p>${escapeHtml(row.category)} · ${escapeHtml(row.set_name || "Unknown set")} · ${escapeHtml(row.card_number || "")} · ${escapeHtml(row.rarity || "Unknown rarity")}</p>
+        <div class="chip-row">
+          <span>Catalog source: ${escapeHtml(row.source)}</span>
+          <span>Synced ${new Date(row.last_synced_at).toLocaleDateString()}</span>
+          <span>${prices.length} price snapshot${prices.length === 1 ? "" : "s"}</span>
+        </div>
+        <div class="source-list">
+          ${prices.slice(0, 8).map((price) => `<span>${escapeHtml(price.variant || "price")} ${escapeHtml(price.price_label || "")}: <strong>${money.format(Number(price.price || 0))}</strong></span>`).join("") || "<span>No price snapshots saved yet for this catalog record.</span>"}
+        </div>
+        ${latest?.source_url ? `<a class="secondary-button tiny-link" href="${latest.source_url}" target="_blank" rel="noreferrer">Open source listing</a>` : ""}
       </div>
     </article>
   `;
