@@ -4,6 +4,7 @@ let cards = [...seedCards];
 let activeVaultRender = null;
 let lastScanCard = null;
 let lastScanImageUrl = "";
+let lastScanSearchHint = "";
 const page = document.body.dataset.page;
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
@@ -204,7 +205,7 @@ function cardTile(card) {
       <div class="mini-card holo-card"><span>${card.category}</span><strong>${card.name.slice(0, 2).toUpperCase()}</strong></div>
       <div>
         <h3>${card.name}</h3>
-        <p>${card.set} · ${card.number} · ${card.rarity}</p>
+        <p>${card.set} &middot; ${card.number} &middot; ${card.rarity}</p>
         <div class="chip-row"><span>${card.category}</span><span>${card.storage}</span><span>AI ${card.grade}</span></div>
       </div>
       <div class="card-actions">
@@ -234,6 +235,7 @@ function initScanner() {
   document.querySelector("#uploadInput").addEventListener("change", (event) => {
     if (!event.target.files?.length) return;
     const file = event.target.files[0];
+    lastScanSearchHint = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
     const image = new Image();
     image.onload = async () => {
       canvas.width = image.width;
@@ -255,6 +257,20 @@ function initScanner() {
   });
 
   document.addEventListener("click", async (event) => {
+    const matchButton = event.target.closest("[data-use-catalog-match]");
+    if (matchButton) {
+      const payload = JSON.parse(decodeURIComponent(matchButton.dataset.useCatalogMatch));
+      applyCatalogMatchToScan(payload);
+      status.textContent = `${payload.name} was applied to the editable scan review. You can still change anything before saving.`;
+      return;
+    }
+
+    const catalogSearchButton = event.target.closest("#scanCatalogSearchButton");
+    if (catalogSearchButton) {
+      await loadScanCatalogMatches(document.querySelector("#scanCatalogQuery")?.value || "", status);
+      return;
+    }
+
     if (!event.target.matches("#saveScanButton")) return;
     const api = window.CardCortexSupabase;
     if (!api || !(await api.getUser())) {
@@ -278,7 +294,7 @@ function initScanner() {
   });
 }
 
-function simulateScan(result, status) {
+async function simulateScan(result, status) {
   const card = cards[Math.floor(Math.random() * cards.length)];
   lastScanCard = { ...card };
   status.textContent = `AI made a best guess: ${card.name}. Review and correct it before saving.`;
@@ -307,9 +323,150 @@ function simulateScan(result, status) {
         <button id="saveScanButton" class="primary-button save-scan-button" type="button">Save reviewed card to vault</button>
         <button id="newGuessButton" class="secondary-button" type="button">Try another AI guess</button>
       </div>
+      <section class="catalog-match-panel">
+        <div>
+          <h2>Catalog match candidates</h2>
+          <p>Search the synced CardCortex catalog and apply the closest real match before saving.</p>
+        </div>
+        <div class="catalog-match-search">
+          <input id="scanCatalogQuery" type="search" value="${escapeAttribute(lastScanSearchHint || card.name)}" placeholder="Search synced catalog by name, set, sport, or game" />
+          <button id="scanCatalogSearchButton" class="secondary-button" type="button">Find real matches</button>
+        </div>
+        <div id="scanCatalogMatches" class="catalog-match-results">
+          <div class="empty-state">Looking for synced catalog matches...</div>
+        </div>
+      </section>
     </article>`;
 
   document.querySelector("#newGuessButton")?.addEventListener("click", () => simulateScan(result, status));
+  await loadScanCatalogMatches(lastScanSearchHint || card.name, status);
+}
+
+async function loadScanCatalogMatches(query, status) {
+  const api = window.CardCortexSupabase;
+  const target = document.querySelector("#scanCatalogMatches");
+  const clean = String(query || "").trim();
+  if (!target) return;
+  if (!api) {
+    target.innerHTML = `<div class="empty-state">Supabase catalog is not connected yet.</div>`;
+    return;
+  }
+  if (!clean) {
+    target.innerHTML = `<div class="empty-state">Type a card name or set to search your synced catalog.</div>`;
+    return;
+  }
+  target.innerHTML = `<div class="ai-panel">Searching synced catalog for "${escapeHtml(clean)}"...</div>`;
+  try {
+    const rows = await api.searchCatalog(clean);
+    if (!rows.length) {
+      const liveMatches = await searchPokemonTcg(clean);
+      if (!liveMatches.length) {
+        target.innerHTML = `<div class="empty-state">No catalog or live source matches found. Try the exact card name, set name, or a simpler search.</div>`;
+        return;
+      }
+      target.innerHTML = liveMatches.slice(0, 5).map(scanPokemonMatchCard).join("");
+      if (status) status.textContent = `Found ${liveMatches.slice(0, 5).length} live source candidate${liveMatches.length === 1 ? "" : "s"}. Pick one or keep editing manually.`;
+      return;
+    }
+    const matches = await Promise.all(rows.slice(0, 5).map(async (row) => ({
+      row,
+      prices: await api.latestPrices(row.id),
+    })));
+    target.innerHTML = matches.map(scanCatalogMatchCard).join("");
+    if (status) status.textContent = `Found ${matches.length} synced catalog candidate${matches.length === 1 ? "" : "s"}. Pick one or keep editing manually.`;
+  } catch (error) {
+    target.innerHTML = `<div class="empty-state">Catalog matching failed: ${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function scanCatalogMatchCard({ row, prices }) {
+  const latest = prices[0];
+  const bestPrice = latest ? Number(latest.price || 0) : 0;
+  const payload = {
+    name: row.name,
+    category: row.category || row.game_or_sport || "Trading card",
+    set: row.set_name || "",
+    number: row.card_number || "",
+    rarity: row.rarity || "",
+    rawValue: bestPrice,
+    gradedValue: Math.round(bestPrice * 1.8),
+    confidence: prices.length ? 92 : 78,
+    imageUrl: row.image_url || "",
+    source: row.source || "synced catalog",
+  };
+  return `
+    <article class="catalog-match-card">
+      <img src="${row.image_url || ""}" alt="${escapeAttribute(row.name)}" />
+      <div>
+        <h3>${escapeHtml(row.name)}</h3>
+        <p>${escapeHtml(row.set_name || "Unknown set")} ${row.card_number ? `#${escapeHtml(row.card_number)}` : ""} ${row.rarity ? `&middot; ${escapeHtml(row.rarity)}` : ""}</p>
+        <div class="chip-row">
+          <span>${escapeHtml(row.source || "catalog")}</span>
+          <span>${bestPrice ? money.format(bestPrice) : "price pending"}</span>
+          <span>${prices.length} price signal${prices.length === 1 ? "" : "s"}</span>
+        </div>
+      </div>
+      <button class="primary-button tiny-button" type="button" data-use-catalog-match="${encodeURIComponent(JSON.stringify(payload))}">Use this match</button>
+    </article>
+  `;
+}
+
+function scanPokemonMatchCard(card) {
+  const priceRows = pokemonPriceRows(card);
+  const best = priceRows.find((row) => row.label === "market") || priceRows[0];
+  const bestPrice = best ? Number(best.value || 0) : 0;
+  const payload = {
+    name: card.name,
+    category: "Pokemon",
+    set: card.set?.name || "",
+    number: card.number || "",
+    rarity: card.rarity || "",
+    rawValue: bestPrice,
+    gradedValue: Math.round(bestPrice * 1.8),
+    confidence: bestPrice ? 90 : 76,
+    imageUrl: card.images?.small || "",
+    source: "Pokemon TCG API",
+  };
+  return `
+    <article class="catalog-match-card">
+      <img src="${card.images?.small || ""}" alt="${escapeAttribute(card.name)}" />
+      <div>
+        <h3>${escapeHtml(card.name)}</h3>
+        <p>${escapeHtml(card.set?.name || "Unknown set")} ${card.number ? `#${escapeHtml(card.number)}` : ""} ${card.rarity ? `&middot; ${escapeHtml(card.rarity)}` : ""}</p>
+        <div class="chip-row">
+          <span>Live source: Pokemon TCG API</span>
+          <span>${bestPrice ? money.format(bestPrice) : "price pending"}</span>
+          <span>${priceRows.length} price signal${priceRows.length === 1 ? "" : "s"}</span>
+        </div>
+      </div>
+      <button class="primary-button tiny-button" type="button" data-use-catalog-match="${encodeURIComponent(JSON.stringify(payload))}">Use this match</button>
+    </article>
+  `;
+}
+
+function pokemonPriceRows(card) {
+  const prices = card.tcgplayer?.prices || {};
+  return Object.entries(prices)
+    .flatMap(([variant, values]) => Object.entries(values || {}).map(([label, value]) => ({ variant, label, value })))
+    .filter((row) => typeof row.value === "number");
+}
+
+function applyCatalogMatchToScan(card) {
+  const fields = {
+    scanName: card.name,
+    scanCategory: card.category,
+    scanSet: card.set,
+    scanNumber: card.number,
+    scanRarity: card.rarity,
+    scanRawValue: Math.round(Number(card.rawValue || 0)),
+    scanGradedValue: Math.round(Number(card.gradedValue || card.rawValue || 0)),
+    scanConfidence: Number(card.confidence || 0),
+  };
+  Object.entries(fields).forEach(([id, value]) => {
+    const input = document.querySelector(`#${id}`);
+    if (input) input.value = value;
+  });
+  lastScanCard = { ...lastScanCard, ...card };
 }
 
 function readScanReviewForm() {
@@ -344,7 +501,7 @@ function renderPricing() {
       const maxSource = Math.max(...Object.values(card.sources));
       return `
       <article class="value-row">
-        <div><h3>${card.name}</h3><p>${card.category} · ${card.set}</p></div>
+        <div><h3>${card.name}</h3><p>${card.category} &middot; ${card.set}</p></div>
         <strong>${money.format(card.rawValue)}</strong>
         <div class="source-bars">
           ${Object.entries(card.sources).map(([source, value]) => `
@@ -367,11 +524,11 @@ function initTcgLookup() {
     const query = document.querySelector("#tcgLookupInput").value.trim();
     const results = document.querySelector("#tcgLookupResults");
     if (!query) return;
-    results.innerHTML = `<div class="ai-panel">Searching Pokémon TCG API for "${escapeHtml(query)}"...</div>`;
+    results.innerHTML = `<div class="ai-panel">Searching Pokemon TCG API for "${escapeHtml(query)}"...</div>`;
     try {
       const found = await searchPokemonTcg(query);
       if (!found.length) {
-        results.innerHTML = `<div class="empty-state">No Pokémon TCG API matches found. Try a simpler name.</div>`;
+        results.innerHTML = `<div class="empty-state">No Pokemon TCG API matches found. Try a simpler name.</div>`;
         return;
       }
       results.innerHTML = found.map(tcgResultCard).join("");
@@ -404,9 +561,9 @@ function tcgResultCard(card) {
       <img src="${card.images?.small || ""}" alt="${escapeAttribute(card.name)}" />
       <div>
         <h3>${escapeHtml(card.name)}</h3>
-        <p>${escapeHtml(card.set?.name || "Unknown set")} · ${escapeHtml(card.number || "")} · ${escapeHtml(card.rarity || "Unknown rarity")}</p>
+        <p>${escapeHtml(card.set?.name || "Unknown set")} &middot; ${escapeHtml(card.number || "")} &middot; ${escapeHtml(card.rarity || "Unknown rarity")}</p>
         <div class="chip-row">
-          <span>Source: Pokémon TCG API</span>
+          <span>Source: Pokemon TCG API</span>
           <span>TCGPlayer ${best ? money.format(best.value) : "n/a"}</span>
         </div>
         <div class="source-list">
@@ -457,7 +614,7 @@ function catalogResultCard({ row, prices }) {
       <img src="${row.image_url || ""}" alt="${escapeAttribute(row.name)}" />
       <div>
         <h3>${escapeHtml(row.name)}</h3>
-        <p>${escapeHtml(row.category)} · ${escapeHtml(row.set_name || "Unknown set")} · ${escapeHtml(row.card_number || "")} · ${escapeHtml(row.rarity || "Unknown rarity")}</p>
+        <p>${escapeHtml(row.category)} &middot; ${escapeHtml(row.set_name || "Unknown set")} &middot; ${escapeHtml(row.card_number || "")} &middot; ${escapeHtml(row.rarity || "Unknown rarity")}</p>
         <div class="chip-row">
           <span>Catalog source: ${escapeHtml(row.source)}</span>
           <span>Synced ${new Date(row.last_synced_at).toLocaleDateString()}</span>
