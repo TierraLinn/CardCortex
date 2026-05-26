@@ -28,49 +28,52 @@ document.querySelectorAll(".brand-glyph").forEach((host) => {
   deepBlue.position.set(2, 3, 3);
   scene.add(deepBlue);
 
-  const card = makePrismCard();
+  const card = makeUniverseCard();
   group.add(card);
 
-  const core = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(0.54, 1),
-    new THREE.MeshPhysicalMaterial({
+  const innerGlow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.74, 80),
+    new THREE.MeshBasicMaterial({
       color: 0x76f7ff,
-      emissive: 0x123d4c,
-      metalness: 0.28,
-      roughness: 0.14,
-      transmission: 0.18,
-      clearcoat: 1,
-      clearcoatRoughness: 0.05,
+      transparent: true,
+      opacity: 0.18,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
     }),
   );
-  core.position.z = 0.18;
-  group.add(core);
+  innerGlow.position.z = -0.04;
+  card.add(innerGlow);
 
   const rings = [
-    makeRing(1.82, 0x76f7ff, 0.7, [Math.PI / 2, 0, 0]),
-    makeRing(2.14, 0xf5b335, 0.34, [1.05, 0.58, 0.2]),
-    makeRing(2.42, 0x1f5a84, 0.46, [0.56, -0.74, 0.88]),
+    makeRing(1.72, 0x76f7ff, 0.72, [Math.PI / 2, 0, 0]),
+    makeRing(2.1, 0xf5b335, 0.34, [1.04, 0.58, 0.2]),
+    makeRing(2.46, 0x1f5a84, 0.48, [0.56, -0.74, 0.88]),
   ];
   rings.forEach((ring) => group.add(ring));
+
+  const planets = makeCardPlanets();
+  group.add(planets);
 
   const sparks = makeSparks();
   group.add(sparks);
 
-  function makePrismCard() {
+  function makeUniverseCard() {
     const texture = new THREE.CanvasTexture(makeBrandTexture());
     texture.colorSpace = THREE.SRGBColorSpace;
-    const geometry = new THREE.BoxGeometry(1.42, 2.05, 0.08, 10, 10, 1);
+    const geometry = new THREE.BoxGeometry(1.28, 1.82, 0.08, 12, 12, 1);
     const material = new THREE.MeshPhysicalMaterial({
       map: texture,
-      metalness: 0.2,
-      roughness: 0.18,
+      emissive: 0x061a2d,
+      emissiveIntensity: 0.22,
+      metalness: 0.3,
+      roughness: 0.13,
       clearcoat: 1,
-      clearcoatRoughness: 0.08,
-      iridescence: 0.8,
+      clearcoatRoughness: 0.04,
+      iridescence: 0.62,
       iridescenceIOR: 1.4,
     });
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.rotation.z = -0.12;
+    mesh.rotation.z = -0.08;
     return mesh;
   }
 
@@ -79,44 +82,68 @@ document.querySelectorAll(".brand-glyph").forEach((host) => {
     c.width = 560;
     c.height = 780;
     const ctx = c.getContext("2d");
-    const bg = ctx.createLinearGradient(0, 0, c.width, c.height);
+    const bg = ctx.createRadialGradient(275, 250, 20, 280, 390, 620);
     bg.addColorStop(0, "#f7fbff");
-    bg.addColorStop(0.14, "#76f7ff");
-    bg.addColorStop(0.44, "#1f5a84");
-    bg.addColorStop(0.72, "#061a2d");
+    bg.addColorStop(0.11, "#76f7ff");
+    bg.addColorStop(0.28, "#1f5a84");
+    bg.addColorStop(0.58, "#061a2d");
     bg.addColorStop(1, "#01030a");
     ctx.fillStyle = bg;
     rounded(ctx, 0, 0, c.width, c.height, 48);
     ctx.fill();
 
-    const flare = ctx.createRadialGradient(150, 120, 12, 170, 120, 430);
+    const flare = ctx.createRadialGradient(245, 245, 8, 250, 250, 430);
     flare.addColorStop(0, "rgba(255,255,255,.96)");
-    flare.addColorStop(0.22, "rgba(255,255,255,.3)");
+    flare.addColorStop(0.16, "rgba(118,247,255,.42)");
     flare.addColorStop(1, "rgba(255,255,255,0)");
     ctx.fillStyle = flare;
     ctx.fillRect(0, 0, c.width, c.height);
 
-    ctx.strokeStyle = "rgba(255,255,255,.62)";
-    ctx.lineWidth = 10;
+    ctx.strokeStyle = "rgba(255,255,255,.54)";
+    ctx.lineWidth = 9;
     rounded(ctx, 34, 34, c.width - 68, c.height - 68, 34);
     ctx.stroke();
 
-    ctx.globalAlpha = 0.42;
-    for (let i = 0; i < 9; i += 1) {
-      ctx.strokeStyle = `rgba(255,255,255,${0.15 - i * 0.01})`;
+    ctx.save();
+    ctx.translate(280, 386);
+    ctx.rotate(-0.33);
+    for (let i = 0; i < 5; i += 1) {
+      ctx.strokeStyle = `rgba(118,247,255,${0.38 - i * 0.055})`;
       ctx.beginPath();
-      ctx.arc(280, 390, 62 + i * 38, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 76 + i * 38, 22 + i * 8, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    const sun = ctx.createRadialGradient(280, 360, 8, 280, 360, 118);
+    sun.addColorStop(0, "#ffffff");
+    sun.addColorStop(0.24, "#76f7ff");
+    sun.addColorStop(0.72, "rgba(31,90,132,.6)");
+    sun.addColorStop(1, "rgba(1,3,10,0)");
+    ctx.fillStyle = sun;
+    ctx.beginPath();
+    ctx.arc(280, 360, 118, 0, Math.PI * 2);
+    ctx.fill();
+
+    const planetColors = ["#f7fbff", "#76f7ff", "#f5b335", "#1f5a84"];
+    [
+      [168, 324, 12],
+      [384, 392, 16],
+      [310, 274, 9],
+      [214, 470, 10],
+    ].forEach(([x, y, r], i) => {
+      ctx.fillStyle = planetColors[i];
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
 
     ctx.fillStyle = "#050713";
-    ctx.font = "950 132px Arial";
-    ctx.fillText("C", 96, 468);
-    ctx.fillText("C", 256, 468);
-    ctx.fillStyle = "rgba(255,255,255,.82)";
-    ctx.font = "900 38px Arial";
-    ctx.fillText("CORTEX", 115, 560);
+    ctx.font = "950 104px Arial";
+    ctx.fillText("CC", 130, 406);
+    ctx.fillStyle = "rgba(255,255,255,.86)";
+    ctx.font = "900 32px Arial";
+    ctx.fillText("CARD UNIVERSE", 118, 560);
     return c;
   }
 
@@ -127,6 +154,34 @@ document.querySelectorAll(".brand-glyph").forEach((host) => {
     );
     ring.rotation.set(rotation[0], rotation[1], rotation[2]);
     return ring;
+  }
+
+  function makeCardPlanets() {
+    const planetGroup = new THREE.Group();
+    const specs = [
+      { radius: 1.72, size: 0.15, color: 0xf7fbff, speed: 0.78, phase: 0 },
+      { radius: 2.1, size: 0.19, color: 0xf5b335, speed: -0.54, phase: 1.6 },
+      { radius: 2.46, size: 0.13, color: 0x76f7ff, speed: 0.42, phase: 3.1 },
+    ];
+    specs.forEach((spec) => {
+      const pivot = new THREE.Group();
+      pivot.userData = spec;
+      const body = new THREE.Mesh(
+        new THREE.SphereGeometry(spec.size, 24, 16),
+        new THREE.MeshPhysicalMaterial({
+          color: spec.color,
+          emissive: spec.color,
+          emissiveIntensity: 0.2,
+          metalness: 0.15,
+          roughness: 0.22,
+          clearcoat: 1,
+        }),
+      );
+      body.position.x = spec.radius;
+      pivot.add(body);
+      planetGroup.add(pivot);
+    });
+    return planetGroup;
   }
 
   function makeSparks() {
@@ -181,12 +236,15 @@ document.querySelectorAll(".brand-glyph").forEach((host) => {
     group.rotation.x += (target.x - group.rotation.x) * 0.05;
     group.rotation.y += (target.y - group.rotation.y) * 0.05;
     group.rotation.z = Math.sin(t * 0.9) * 0.08;
-    card.rotation.y = Math.sin(t * 1.1) * 0.22;
-    core.rotation.x = t * 1.4;
-    core.rotation.y = t * 1.1;
+    card.rotation.y = Math.sin(t * 1.1) * 0.16;
+    innerGlow.material.opacity = 0.14 + Math.sin(t * 3) * 0.04;
     rings[0].rotation.z = t * 1.4;
     rings[1].rotation.z = -t * 1.05;
     rings[2].rotation.z = t * 0.82;
+    planets.children.forEach((pivot) => {
+      pivot.rotation.y = t * pivot.userData.speed + pivot.userData.phase;
+      pivot.rotation.z = Math.sin(t * 0.5 + pivot.userData.phase) * 0.25;
+    });
     sparks.rotation.z = -t * 0.4;
     sparks.rotation.y = t * 0.25;
     renderer.render(scene, camera);
