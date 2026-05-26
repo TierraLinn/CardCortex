@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#050713" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="CardCortex" />
-    <link rel="stylesheet" href="./styles.css?v=workflow1" />
+    <link rel="stylesheet" href="./styles.css?v=vault1" />
   </head>
   <body data-page="vault">
     <div class="site-shell">
@@ -59,30 +59,36 @@
           </form>
         </section>
         <section id="categoryStats" class="stat-grid"></section>
-        <section class="insight-grid">
-          <article>
-            <h2>Portfolio pulse</h2>
-            <p id="portfolioPulse">Calculating collection strength...</p>
-          </article>
-          <article>
-            <h2>Best next move</h2>
-            <p id="nextMove">Review cards with high graded upside.</p>
-          </article>
-          <article>
-            <h2>Insurance snapshot</h2>
-            <p id="insuranceSnapshot">Export-ready value records coming online.</p>
-          </article>
+        <section class="vault-command-center">
+          <div class="vault-main-panel">
+            <section class="insight-grid">
+              <article>
+                <h2>Portfolio pulse</h2>
+                <p id="portfolioPulse">Calculating collection strength...</p>
+              </article>
+              <article>
+                <h2>Best next move</h2>
+                <p id="nextMove">Review cards with high graded upside.</p>
+              </article>
+              <article>
+                <h2>Insurance snapshot</h2>
+                <p id="insuranceSnapshot">Export-ready value records coming online.</p>
+              </article>
+            </section>
+            <section id="vaultLanes" class="vault-lanes" aria-label="Collection command lanes"></section>
+            <section id="vaultEditor" class="vault-editor" hidden></section>
+            <section id="cardGrid" class="card-grid"></section>
+          </div>
+          <aside id="vaultDetail" class="vault-detail-panel" aria-label="Selected card details"></aside>
         </section>
-        <section id="vaultEditor" class="vault-editor" hidden></section>
-        <section id="cardGrid" class="card-grid"></section>
       </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js"></script>
     <script src="./supabase-client.js"></script>
     <script src="./data.js"></script>
-    <script type="module" src="./brand3d.js?v=workflow1"></script>
-    <script type="module" src="./page3d.js?v=workflow1"></script>
-    <script src="./app.js?v=workflow1"></script>
+    <script type="module" src="./brand3d.js?v=vault1"></script>
+    <script type="module" src="./page3d.js?v=vault1"></script>
+    <script src="./app.js?v=vault1"></script>
   </body>
 </html>

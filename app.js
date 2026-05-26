@@ -2,6 +2,7 @@ const seedCards = window.CardCortexData.cards;
 const { marketplaces } = window.CardCortexData;
 let cards = [...seedCards];
 let activeVaultRender = null;
+let activeVaultId = "";
 let lastScanCard = null;
 let lastScanImageUrl = "";
 let lastScanSearchHint = "";
@@ -53,11 +54,16 @@ function renderVault() {
       .filter((card) => category === "All categories" || card.category === category)
       .filter((card) => `${card.name} ${card.category} ${card.set} ${card.storage}`.toLowerCase().includes(query))
       .sort((a, b) => sort.value === "name" ? a.name.localeCompare(b.name) : sort.value === "grade" ? b.grade - a.grade : b.rawValue - a.rawValue);
+    if (!activeVaultId || !sorted.some((card) => card.id === activeVaultId)) {
+      activeVaultId = sorted[0]?.id || cards[0]?.id || "";
+    }
     document.querySelector("#vaultTotal").textContent = money.format(totalValue(sorted));
     const grid = document.querySelector("#cardGrid");
     grid.classList.toggle("binder-mode", binderMode);
     grid.innerHTML = sorted.map(cardTile).join("");
     renderStats(sorted);
+    renderVaultLanes(sorted);
+    renderVaultDetail(sorted.find((card) => card.id === activeVaultId) || sorted[0] || null);
   };
   activeVaultRender = rerender;
   [search, filter, sort].forEach((el) => el.addEventListener("input", rerender));
@@ -86,13 +92,45 @@ function renderVault() {
   document.querySelector("#cardGrid").addEventListener("click", async (event) => {
     const manage = event.target.closest("[data-manage-card]");
     const remove = event.target.closest("[data-delete-card]");
+    const grade = event.target.closest("[data-grade-card]");
+    const sell = event.target.closest("[data-sell-card]");
+    const select = event.target.closest("[data-select-card]");
     if (manage) {
+      activeVaultId = manage.dataset.manageCard;
       openVaultEditor(manage.dataset.manageCard);
+      rerender();
       return;
     }
     if (remove) {
       await deleteVaultCard(remove.dataset.deleteCard);
+      return;
     }
+    if (grade) {
+      sendVaultCardToGrading(grade.dataset.gradeCard);
+      return;
+    }
+    if (sell) {
+      sendVaultCardToMarketplace(sell.dataset.sellCard);
+      return;
+    }
+    if (select) {
+      activeVaultId = select.dataset.selectCard;
+      rerender();
+    }
+  });
+  document.querySelector("#vaultDetail")?.addEventListener("click", (event) => {
+    const grade = event.target.closest("[data-grade-card]");
+    const sell = event.target.closest("[data-sell-card]");
+    const manage = event.target.closest("[data-manage-card]");
+    if (grade) sendVaultCardToGrading(grade.dataset.gradeCard);
+    if (sell) sendVaultCardToMarketplace(sell.dataset.sellCard);
+    if (manage) openVaultEditor(manage.dataset.manageCard);
+  });
+  document.querySelector("#vaultLanes")?.addEventListener("click", (event) => {
+    const select = event.target.closest("[data-select-card]");
+    if (!select) return;
+    activeVaultId = select.dataset.selectCard;
+    rerender();
   });
   exportButton?.addEventListener("click", () => {
     exportVaultCsv(cards);
@@ -231,34 +269,153 @@ function renderStats(items) {
     map[card.category] = (map[card.category] || 0) + card.rawValue;
     return map;
   }, {});
+  const upside = items.reduce((sum, card) => sum + gradedUpside(card), 0);
+  const averageGrade = average(items.map((card) => Number(card.grade || 0)).filter(Boolean));
+  const readyToSell = items.filter((card) => card.rawValue >= 100 || card.confidence >= 85).length;
   document.querySelector("#categoryStats").innerHTML = Object.entries(grouped)
     .sort((a, b) => b[1] - a[1])
     .map(([category, value]) => `<article><small>${category}</small><strong>${money.format(value)}</strong></article>`)
-    .join("");
+    .join("") + `
+      <article><small>Graded upside</small><strong>${money.format(upside)}</strong></article>
+      <article><small>Average AI grade</small><strong>${averageGrade ? averageGrade.toFixed(1) : "n/a"}</strong></article>
+      <article><small>Sell-ready cards</small><strong>${readyToSell}</strong></article>`;
   const top = [...items].sort((a, b) => b.rawValue - a.rawValue)[0];
-  const upside = items.reduce((sum, card) => sum + Math.max(0, (card.gradedValue || 0) - (card.rawValue || 0)), 0);
+  const topUpside = [...items].sort((a, b) => gradedUpside(b) - gradedUpside(a))[0];
   const pulse = document.querySelector("#portfolioPulse");
   const next = document.querySelector("#nextMove");
   const insurance = document.querySelector("#insuranceSnapshot");
-  if (pulse) pulse.textContent = `${items.length} tracked cards across ${Object.keys(grouped).length} categories with ${money.format(totalValue(items))} current raw value.`;
-  if (next) next.textContent = top ? `Focus on ${top.name}; it carries the highest current value signal at ${money.format(top.rawValue)}.` : "Add cards to unlock recommendations.";
+  if (pulse) pulse.textContent = `${items.length} tracked cards across ${Object.keys(grouped).length} categories, ${money.format(totalValue(items))} raw value, and ${money.format(upside)} possible graded spread.`;
+  if (next) next.textContent = topUpside && gradedUpside(topUpside) ? `Grade-review ${topUpside.name}; it has ${money.format(gradedUpside(topUpside))} projected upside.` : top ? `Focus on ${top.name}; it carries the highest current value signal at ${money.format(top.rawValue)}.` : "Add cards to unlock recommendations.";
   if (insurance) insurance.textContent = `Insurance snapshot estimate: ${money.format(totalValue(items))}. Potential graded upside: ${money.format(upside)}.`;
 }
 
 function cardTile(card) {
+  const active = card.id === activeVaultId;
+  const readiness = cardReadiness(card);
   return `
-    <article class="collection-card" style="--card-accent:${card.color}">
+    <article class="collection-card ${active ? "active-card" : ""}" style="--card-accent:${card.color}" data-select-card="${card.id}">
       <div class="mini-card holo-card"><span>${card.category}</span><strong>${card.name.slice(0, 2).toUpperCase()}</strong></div>
       <div>
         <h3>${card.name}</h3>
         <p>${card.set} &middot; ${card.number} &middot; ${card.rarity}</p>
-        <div class="chip-row"><span>${card.category}</span><span>${card.storage}</span><span>AI ${card.grade}</span></div>
+        <div class="chip-row"><span>${card.category}</span><span>${card.storage}</span><span>AI ${card.grade}</span><span>${readiness.label}</span></div>
       </div>
       <div class="card-actions">
         <strong>${money.format(card.rawValue)}</strong>
+        <button class="secondary-button tiny-button" data-grade-card="${card.id}" type="button">Grade</button>
+        <button class="secondary-button tiny-button" data-sell-card="${card.id}" type="button">Sell</button>
         ${card.saved ? `<button class="secondary-button tiny-button" data-manage-card="${card.id}" type="button">Manage</button><button class="danger-button tiny-button" data-delete-card="${card.id}" type="button">Delete</button>` : ""}
       </div>
     </article>`;
+}
+
+function renderVaultDetail(card) {
+  const target = document.querySelector("#vaultDetail");
+  if (!target) return;
+  if (!card) {
+    target.innerHTML = `<div class="empty-state">Select a card to open command details.</div>`;
+    return;
+  }
+  const readiness = cardReadiness(card);
+  const route = bestSellRoute(card);
+  const upside = gradedUpside(card);
+  const sourceRows = Object.entries(card.sources || {}).map(([name, value]) => `<span><small>${escapeHtml(name)}</small><strong>${money.format(Number(value || 0))}</strong></span>`).join("");
+  target.innerHTML = `
+    <div class="vault-detail-hero" style="--card-accent:${card.color}">
+      <div class="mini-card holo-card"><span>${escapeHtml(card.category)}</span><strong>${escapeHtml(card.name.slice(0, 2).toUpperCase())}</strong></div>
+      <div>
+        <small>Selected card</small>
+        <h2>${escapeHtml(card.name)}</h2>
+        <p>${escapeHtml(card.set)} &middot; ${escapeHtml(card.number)} &middot; ${escapeHtml(card.rarity)}</p>
+      </div>
+    </div>
+    <div class="detail-metrics">
+      <article><small>Raw value</small><strong>${money.format(card.rawValue)}</strong></article>
+      <article><small>Graded value</small><strong>${money.format(card.gradedValue || card.rawValue)}</strong></article>
+      <article><small>Upside</small><strong>${money.format(upside)}</strong></article>
+      <article><small>AI grade</small><strong>${card.grade || "n/a"}</strong></article>
+    </div>
+    <div class="vault-action-plan">
+      <h3>${escapeHtml(readiness.label)}</h3>
+      <p>${escapeHtml(readiness.detail)}</p>
+      <div class="readiness-meter"><i style="width:${readiness.score}%"></i></div>
+    </div>
+    <div class="detail-source-list">
+      ${sourceRows || "<span><small>Source</small><strong>Pending</strong></span>"}
+    </div>
+    <div class="vault-detail-actions">
+      <button class="primary-button" data-grade-card="${card.id}" type="button">Send to grading</button>
+      <button class="secondary-button" data-sell-card="${card.id}" type="button">Prepare sale</button>
+      ${card.saved ? `<button class="secondary-button" data-manage-card="${card.id}" type="button">Edit record</button>` : ""}
+    </div>
+    <p class="vault-route-note">Best current route: ${escapeHtml(route.name)} for ${escapeHtml(route.reason)}.</p>
+  `;
+}
+
+function renderVaultLanes(items) {
+  const target = document.querySelector("#vaultLanes");
+  if (!target) return;
+  const gradeCandidates = [...items].sort((a, b) => gradedUpside(b) - gradedUpside(a)).slice(0, 3);
+  const sellCandidates = [...items].sort((a, b) => (b.rawValue + b.confidence) - (a.rawValue + a.confidence)).slice(0, 3);
+  const cleanupCandidates = items.filter((card) => /unassigned|inbox|box/i.test(card.storage || "") || !card.storage).slice(0, 3);
+  target.innerHTML = [
+    vaultLane("Grade candidates", gradeCandidates, (card) => `${money.format(gradedUpside(card))} upside`),
+    vaultLane("Sell-ready watchlist", sellCandidates, (card) => `${money.format(card.rawValue)} raw`),
+    vaultLane("Storage cleanup", cleanupCandidates.length ? cleanupCandidates : items.slice(0, 3), (card) => card.storage || "Unassigned"),
+  ].join("");
+}
+
+function vaultLane(title, laneCards, meta) {
+  return `
+    <article class="vault-lane">
+      <h2>${title}</h2>
+      ${laneCards.map((card) => `
+        <button type="button" data-select-card="${card.id}" class="${card.id === activeVaultId ? "active-lane-card" : ""}">
+          <span>${escapeHtml(card.name)}</span>
+          <small>${escapeHtml(meta(card))}</small>
+        </button>
+      `).join("") || `<p class="empty-state">No cards in this lane yet.</p>`}
+    </article>`;
+}
+
+function gradedUpside(card) {
+  return Math.max(0, Number(card.gradedValue || 0) - Number(card.rawValue || 0));
+}
+
+function cardReadiness(card) {
+  const confidence = Number(card.confidence || 0);
+  const grade = Number(card.grade || 0);
+  const upside = gradedUpside(card);
+  const score = clamp(confidence * 0.4 + grade * 6 + Math.min(35, upside / 30), 12, 100);
+  if (score >= 82) return { score, label: "Ready for action", detail: "High confidence, strong grade signal, or meaningful value spread. Good candidate for grading review or listing prep." };
+  if (score >= 58) return { score, label: "Needs verification", detail: "Worth reviewing with fresh front/back photos and current comps before deciding to grade, hold, or sell." };
+  return { score, label: "Needs research", detail: "Add better scans, confirm set number, and check values before making a selling or grading decision." };
+}
+
+function bestSellRoute(card) {
+  const category = String(card.category || "").toLowerCase();
+  if (/pokemon|magic|yu-gi|dragon/.test(category)) return { name: "TCGPlayer-style route", reason: "TCG demand and set-specific buyers" };
+  if (/sports/.test(category)) return { name: "eBay or consignment", reason: "sold-comps visibility and graded-card demand" };
+  if (/marvel|spider|bakugan|buddy|minecraft/.test(category)) return { name: "Collector community plus eBay", reason: "niche buyers and broader search demand" };
+  return { name: "eBay", reason: "broad collector discovery" };
+}
+
+function sendVaultCardToGrading(id) {
+  const card = cards.find((item) => item.id === id);
+  if (!card) return;
+  localStorage.setItem("cardcortex-grade-source-name", card.name);
+  window.location.href = "./grading.html?from=vault";
+}
+
+function sendVaultCardToMarketplace(id) {
+  const card = cards.find((item) => item.id === id);
+  if (!card) return;
+  localStorage.setItem("cardcortex-listing-card", JSON.stringify({
+    name: card.name,
+    price: card.rawValue,
+    condition: `AI grade ${card.grade || "pending"} with ${card.confidence || 0}% confidence. ${card.set} ${card.number}.`,
+  }));
+  window.location.href = "./marketplace.html?from=vault";
 }
 
 function initScanner() {
@@ -1258,6 +1415,15 @@ function renderMarketplace() {
 function initListingStudio() {
   const form = document.querySelector("#listingForm");
   if (!form) return;
+  const handoff = localStorage.getItem("cardcortex-listing-card");
+  if (handoff) {
+    try {
+      const card = JSON.parse(handoff);
+      document.querySelector("#listingCardName").value = card.name || "";
+      document.querySelector("#listingCondition").value = card.condition || "";
+      document.querySelector("#listingPrice").value = card.price || "";
+    } catch {}
+  }
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const name = document.querySelector("#listingCardName").value.trim() || "Trading card";
