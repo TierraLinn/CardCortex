@@ -50,6 +50,7 @@ if (page === "scanner") initScanner();
 if (page === "pricing") renderPricing();
 if (page === "grading") renderGrading();
 if (page === "marketplace") renderMarketplace();
+if (page === "reports") renderReports();
 if (page === "assistant") initAssistant();
 initPwaInstall();
 
@@ -1613,6 +1614,382 @@ function escapeHtml(value) {
     const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
     return map[char];
   });
+}
+
+function renderReports() {
+  const typeSelect = document.querySelector("#reportType");
+  const scopeSelect = document.querySelector("#reportScope");
+  const status = document.querySelector("#reportStatus");
+  const exportButton = document.querySelector("#exportReportButton");
+  const csvButton = document.querySelector("#exportReportCsvButton");
+  const copyButton = document.querySelector("#copyReportButton");
+  const printButton = document.querySelector("#printReportButton");
+  if (!typeSelect || !scopeSelect) return;
+  let activeReport = null;
+
+  const draw = () => {
+    populateReportScope(scopeSelect);
+    const scopedCards = filterReportCards(cards, scopeSelect.value);
+    activeReport = buildPortfolioReport(scopedCards, typeSelect.value);
+    renderPortfolioReport(activeReport);
+    storage.setItem("cardcortex-portfolio-report", JSON.stringify(activeReport));
+  };
+
+  [typeSelect, scopeSelect].forEach((control) => control.addEventListener("input", draw));
+  exportButton?.addEventListener("click", () => {
+    const report = activeReport || buildPortfolioReport(filterReportCards(cards, scopeSelect.value), typeSelect.value);
+    exportJson(report, `cardcortex-${report.slug}-${report.createdDate}.json`);
+  });
+  csvButton?.addEventListener("click", () => {
+    const report = activeReport || buildPortfolioReport(filterReportCards(cards, scopeSelect.value), typeSelect.value);
+    exportReportCsv(report);
+  });
+  copyButton?.addEventListener("click", async () => {
+    const text = document.querySelector("#reportPreviewText")?.textContent || "";
+    if (!text.trim()) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      copyButton.textContent = "Copied report";
+    } catch {
+      const preview = document.querySelector("#reportPreviewText");
+      preview?.focus();
+      copyButton.textContent = "Select preview text";
+    }
+  });
+  printButton?.addEventListener("click", () => window.print());
+  document.querySelector("#reportTables")?.addEventListener("click", (event) => {
+    const row = event.target.closest("[data-report-card]");
+    if (!row) return;
+    const card = cards.find((item) => item.id === row.dataset.reportCard);
+    if (!card) return;
+    storage.setItem("cardcortex-listing-card", JSON.stringify({
+      name: card.name,
+      condition: `Portfolio report review: AI grade ${card.grade || "n/a"}, confidence ${Math.round(card.confidence || 0)}%, storage ${cleanText(card.storage)}.`,
+      price: card.rawValue,
+    }));
+    if (status) status.textContent = `${cleanText(card.name)} staged for the Sell page. Open Sell to generate a launch kit.`;
+  });
+
+  populateReportScope(scopeSelect);
+  loadSupabaseCards(status).then(() => {
+    populateReportScope(scopeSelect);
+    draw();
+  });
+  draw();
+}
+
+function populateReportScope(select) {
+  if (!select) return;
+  const current = select.value || "all";
+  const categories = [...new Set(cards.map((card) => card.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const fixed = [
+    ["all", "Whole collection"],
+    ["high-value", "High-value cards"],
+    ["grade-candidates", "Grade candidates"],
+    ["sell-ready", "Sell-ready cards"],
+    ["storage-review", "Storage review"],
+  ];
+  const options = [
+    ...fixed,
+    ...categories.map((category) => [`category:${category}`, `${category} category`]),
+  ];
+  select.innerHTML = options.map(([value, label]) => `<option value="${escapeAttribute(value)}">${escapeHtml(label)}</option>`).join("");
+  select.value = options.some(([value]) => value === current) ? current : "all";
+}
+
+function filterReportCards(items, scope) {
+  const source = [...items];
+  if (!scope || scope === "all") return source;
+  if (scope === "high-value") return source.filter((card) => Number(card.rawValue || 0) >= 100);
+  if (scope === "grade-candidates") return source.filter((card) => gradedUpside(card) >= 40 || Number(card.grade || 0) >= 8.7);
+  if (scope === "sell-ready") return source.filter((card) => cardReadiness(card).score >= 70 || Number(card.rawValue || 0) >= 150);
+  if (scope === "storage-review") return source.filter((card) => needsStorageReview(card));
+  if (scope.startsWith("category:")) return source.filter((card) => card.category === scope.slice(9));
+  return source;
+}
+
+function buildPortfolioReport(items, type = "insurance") {
+  const reportCards = [...items];
+  const categories = reportCategoryExposure(reportCards);
+  const rawTotal = reportCards.reduce((sum, card) => sum + Number(card.rawValue || 0), 0);
+  const gradedTotal = reportCards.reduce((sum, card) => sum + Number(card.gradedValue || card.rawValue || 0), 0);
+  const upside = Math.max(0, gradedTotal - rawTotal);
+  const averageGrade = average(reportCards.map((card) => Number(card.grade || 0)).filter(Boolean));
+  const averageConfidence = average(reportCards.map((card) => Number(card.confidence || 0)).filter(Boolean));
+  const topCards = [...reportCards].sort((a, b) => Number(b.rawValue || 0) - Number(a.rawValue || 0)).slice(0, 8);
+  const gradeCandidates = [...reportCards].sort((a, b) => gradedUpside(b) - gradedUpside(a)).slice(0, 8);
+  const sellCandidates = [...reportCards].sort((a, b) => {
+    const bScore = cardReadiness(b).score + Number(b.rawValue || 0) / 16;
+    const aScore = cardReadiness(a).score + Number(a.rawValue || 0) / 16;
+    return bScore - aScore;
+  }).slice(0, 8);
+  const certificates = getCertificates();
+  const matchedCertificates = certificates.filter((cert) => reportCards.some((card) => cleanText(card.name).toLowerCase() === cleanText(cert.sourceName).toLowerCase()));
+  const highValueCards = reportCards.filter((card) => Number(card.rawValue || 0) >= 250);
+  const lowConfidenceCards = reportCards.filter((card) => Number(card.confidence || 0) && Number(card.confidence || 0) < 80);
+  const storageReviewCards = reportCards.filter(needsStorageReview);
+  const sourceNames = [...new Set(reportCards.flatMap((card) => Object.entries(card.sources || {}).filter((entry) => Number(entry[1] || 0) > 0).map((entry) => entry[0])))];
+  const replacementEstimate = Math.round(rawTotal * 1.12 + Math.min(upside * 0.22, rawTotal * 0.35) + highValueCards.length * 20);
+  const riskScore = clamp(highValueCards.length * 11 + lowConfidenceCards.length * 7 + storageReviewCards.length * 8 - sourceNames.length * 2, 8, 96);
+  const riskLabel = riskScore >= 70 ? "High attention" : riskScore >= 42 ? "Managed watch" : "Stable";
+  const topCard = topCards[0];
+  const report = {
+    type,
+    slug: slugify(`${type}-portfolio-report`),
+    createdAt: new Date().toISOString(),
+    createdDate: new Date().toISOString().slice(0, 10),
+    cards: reportCards,
+    totals: {
+      rawValue: rawTotal,
+      gradedValue: gradedTotal,
+      gradedUpside: upside,
+      replacementEstimate,
+      averageGrade,
+      averageConfidence,
+      sourceCount: sourceNames.length,
+      categoryCount: categories.length,
+      certificateCount: matchedCertificates.length,
+      riskScore,
+      riskLabel,
+    },
+    categories,
+    sourceNames,
+    topCards,
+    gradeCandidates,
+    sellCandidates,
+    riskNotes: reportRiskNotes(highValueCards, lowConfidenceCards, storageReviewCards, sourceNames),
+    actionPlan: reportActionPlan(type, topCards, gradeCandidates, sellCandidates, storageReviewCards, matchedCertificates),
+    narrative: reportNarrative(type, reportCards, rawTotal, upside, replacementEstimate, topCard, categories),
+  };
+  return report;
+}
+
+function reportCategoryExposure(items) {
+  const grouped = items.reduce((map, card) => {
+    const key = card.category || "Uncategorized";
+    if (!map[key]) map[key] = { category: key, count: 0, rawValue: 0, gradedValue: 0, highest: null, color: card.color || "#76f7ff" };
+    map[key].count += 1;
+    map[key].rawValue += Number(card.rawValue || 0);
+    map[key].gradedValue += Number(card.gradedValue || card.rawValue || 0);
+    if (!map[key].highest || Number(card.rawValue || 0) > Number(map[key].highest.rawValue || 0)) map[key].highest = card;
+    return map;
+  }, {});
+  return Object.values(grouped).sort((a, b) => b.rawValue - a.rawValue);
+}
+
+function renderPortfolioReport(report) {
+  renderReportStats(report);
+  renderReportNarrative(report);
+  renderReportExposure(report);
+  renderReportTables(report);
+  renderReportPreview(report);
+}
+
+function renderReportStats(report) {
+  const target = document.querySelector("#reportStats");
+  const hero = document.querySelector("#reportHeroMetric");
+  if (hero) {
+    hero.innerHTML = `<small>Replacement estimate</small><strong>${money.format(report.totals.replacementEstimate)}</strong><span>${escapeHtml(report.totals.riskLabel)} risk posture</span>`;
+  }
+  if (!target) return;
+  const stats = [
+    ["Tracked value", money.format(report.totals.rawValue), `${report.cards.length} cards in scope`],
+    ["Graded upside", money.format(report.totals.gradedUpside), `${report.gradeCandidates.length} grade candidates`],
+    ["Average grade", report.totals.averageGrade ? report.totals.averageGrade.toFixed(1) : "n/a", `${Math.round(report.totals.averageConfidence || 0)}% average confidence`],
+    ["Source spread", String(report.totals.sourceCount), `${report.totals.categoryCount} categories covered`],
+    ["Saved certificates", String(report.totals.certificateCount), "front/back evidence attached"],
+    ["Risk score", `${Math.round(report.totals.riskScore)}/100`, report.totals.riskLabel],
+  ];
+  target.innerHTML = stats.map(([label, value, detail]) => `
+    <article class="report-stat">
+      <small>${escapeHtml(label)}</small>
+      <strong>${escapeHtml(value)}</strong>
+      <span>${escapeHtml(detail)}</span>
+    </article>
+  `).join("");
+}
+
+function renderReportNarrative(report) {
+  const target = document.querySelector("#reportNarrative");
+  if (!target) return;
+  target.innerHTML = `
+    <article class="report-panel report-narrative-card">
+      <h2>${escapeHtml(reportTitle(report.type))}</h2>
+      <p>${escapeHtml(report.narrative)}</p>
+      <div class="report-risk-radar">
+        <span><small>High value</small><strong>${report.cards.filter((card) => Number(card.rawValue || 0) >= 250).length}</strong></span>
+        <span><small>Storage review</small><strong>${report.cards.filter(needsStorageReview).length}</strong></span>
+        <span><small>Market sources</small><strong>${report.sourceNames.length}</strong></span>
+      </div>
+    </article>
+    <article class="report-panel">
+      <h2>Next actions</h2>
+      <ol class="report-action-list">
+        ${report.actionPlan.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ol>
+    </article>
+  `;
+}
+
+function renderReportExposure(report) {
+  const target = document.querySelector("#categoryExposure");
+  if (!target) return;
+  const max = Math.max(1, ...report.categories.map((category) => category.rawValue));
+  target.innerHTML = report.categories.map((category) => `
+    <article class="exposure-row" style="--card-accent:${category.color}; --exposure:${Math.max(6, (category.rawValue / max) * 100)}%">
+      <div>
+        <strong>${escapeHtml(category.category)}</strong>
+        <span>${category.count} card${category.count === 1 ? "" : "s"} - top: ${escapeHtml(cleanText(category.highest?.name || "n/a"))}</span>
+      </div>
+      <div class="exposure-bar"><i></i></div>
+      <small>${money.format(category.rawValue)}</small>
+    </article>
+  `).join("") || `<article class="empty-state">No category exposure yet.</article>`;
+}
+
+function renderReportTables(report) {
+  const target = document.querySelector("#reportTables");
+  if (!target) return;
+  target.innerHTML = `
+    ${reportTable("Top value cards", report.topCards, (card) => money.format(card.rawValue), (card) => `${card.category} - ${cleanText(card.storage)}`)}
+    ${reportTable("Grade upside queue", report.gradeCandidates, (card) => money.format(gradedUpside(card)), (card) => `AI ${card.grade || "n/a"} - ${Math.round(card.confidence || 0)}% confidence`)}
+    ${reportTable("Sell route queue", report.sellCandidates, (card) => bestSellRoute(card).name, (card) => `${cardReadiness(card).label} - ${money.format(card.rawValue)}`)}
+    <article class="report-panel report-risk-panel">
+      <h2>Risk notes</h2>
+      <ul>${report.riskNotes.map((note) => `<li>${escapeHtml(note)}</li>`).join("")}</ul>
+    </article>
+  `;
+}
+
+function reportTable(title, rows, metric, detail) {
+  return `
+    <article class="report-panel report-table">
+      <h2>${escapeHtml(title)}</h2>
+      ${rows.map((card, index) => `
+        <button type="button" class="report-card-row" data-report-card="${escapeAttribute(card.id)}">
+          <span>${index + 1}</span>
+          <strong>${escapeHtml(cleanText(card.name))}</strong>
+          <em>${escapeHtml(detail(card))}</em>
+          <small>${escapeHtml(metric(card))}</small>
+        </button>
+      `).join("") || `<p class="empty-state">No matching cards yet.</p>`}
+    </article>
+  `;
+}
+
+function renderReportPreview(report) {
+  const target = document.querySelector("#reportPreviewText");
+  if (!target) return;
+  const preview = [
+    `CardCortex ${reportTitle(report.type)}`,
+    `Created: ${new Date(report.createdAt).toLocaleString()}`,
+    `Cards in report: ${report.cards.length}`,
+    `Tracked raw value: ${money.format(report.totals.rawValue)}`,
+    `Replacement estimate: ${money.format(report.totals.replacementEstimate)}`,
+    `Projected graded upside: ${money.format(report.totals.gradedUpside)}`,
+    `Average AI grade: ${report.totals.averageGrade ? report.totals.averageGrade.toFixed(1) : "n/a"}`,
+    `Average confidence: ${Math.round(report.totals.averageConfidence || 0)}%`,
+    `Risk posture: ${report.totals.riskLabel} (${Math.round(report.totals.riskScore)}/100)`,
+    "",
+    "Executive summary:",
+    report.narrative,
+    "",
+    "Top cards:",
+    ...report.topCards.slice(0, 5).map((card, index) => `${index + 1}. ${cleanText(card.name)} - ${card.category} - ${money.format(card.rawValue)} - ${cleanText(card.storage)}`),
+    "",
+    "Recommended actions:",
+    ...report.actionPlan.map((item, index) => `${index + 1}. ${item}`),
+    "",
+    "Risk notes:",
+    ...report.riskNotes.map((item, index) => `${index + 1}. ${item}`),
+  ].join("\n");
+  target.textContent = preview;
+}
+
+function reportNarrative(type, items, rawTotal, upside, replacementEstimate, topCard, categories) {
+  const scope = `${items.length} card${items.length === 1 ? "" : "s"}`;
+  const topCategory = categories[0]?.category || "uncategorized";
+  if (type === "seller") {
+    return `${scope} are prepared for selling review with ${money.format(rawTotal)} tracked value. The strongest current route begins with ${topCard ? cleanText(topCard.name) : "the highest-value card"}, while ${topCategory} carries the largest category exposure.`;
+  }
+  if (type === "grading") {
+    return `${scope} show ${money.format(upside)} in projected graded upside. Prioritize clean front/back scans, confidence review, and certificate saving before sending anything to a paid grading route.`;
+  }
+  if (type === "audit") {
+    return `${scope} are ready for a collection audit. The report checks storage gaps, low-confidence values, category concentration, saved certificates, and exportable evidence.`;
+  }
+  return `${scope} are summarized for insurance and replacement planning at ${money.format(replacementEstimate)} estimated coverage. ${topCard ? cleanText(topCard.name) : "The top card"} anchors the report, and ${topCategory} is the largest value category.`;
+}
+
+function reportActionPlan(type, topCards, gradeCandidates, sellCandidates, storageReviewCards, certificates) {
+  const actions = [];
+  if (type === "seller") {
+    actions.push(sellCandidates[0] ? `Prepare a launch kit for ${cleanText(sellCandidates[0].name)} on ${bestSellRoute(sellCandidates[0]).name}.` : "Add values to unlock sell-route recommendations.");
+    actions.push("Export listing kits for the top sell candidates before publishing.");
+  } else if (type === "grading") {
+    actions.push(gradeCandidates[0] ? `Run fresh two-photo grading evidence for ${cleanText(gradeCandidates[0].name)}.` : "Add graded value estimates to build a grading queue.");
+    actions.push("Save a CardCortex certificate for every card you plan to sell or insure.");
+  } else if (type === "audit") {
+    actions.push(storageReviewCards[0] ? `Fix storage details for ${cleanText(storageReviewCards[0].name)} first.` : "Storage fields look organized for this report scope.");
+    actions.push("Export CSV and JSON backups after every major vault cleanup.");
+  } else {
+    actions.push(topCards[0] ? `Photograph and verify ${cleanText(topCards[0].name)} because it carries the highest reported value.` : "Add high-value cards to create an insurance priority list.");
+    actions.push("Export the report JSON and CSV, then keep a printed or PDF copy with collection photos.");
+  }
+  actions.push(certificates.length ? `${certificates.length} saved certificate${certificates.length === 1 ? "" : "s"} matched cards in this report.` : "Create front/back certificates for the top cards so the report has image evidence.");
+  actions.push("Re-run values before selling or filing an insurance record because markets move.");
+  return actions.slice(0, 4);
+}
+
+function reportRiskNotes(highValueCards, lowConfidenceCards, storageReviewCards, sourceNames) {
+  const notes = [];
+  if (highValueCards.length) notes.push(`${highValueCards.length} card${highValueCards.length === 1 ? "" : "s"} are above $250 and should have photos, storage location, and insured-shipping notes.`);
+  if (lowConfidenceCards.length) notes.push(`${lowConfidenceCards.length} card${lowConfidenceCards.length === 1 ? "" : "s"} have lower confidence signals and need fresh comps or cleaner scans.`);
+  if (storageReviewCards.length) notes.push(`${storageReviewCards.length} card${storageReviewCards.length === 1 ? "" : "s"} need storage cleanup before a serious insurance export.`);
+  if (sourceNames.length < 2) notes.push("Add more pricing sources before relying on this report for a major sale or claim.");
+  if (!notes.length) notes.push("No major report risk flags in this scope. Keep values refreshed and store photo evidence.");
+  return notes;
+}
+
+function exportReportCsv(report) {
+  const headers = ["Name", "Category", "Set", "Number", "Storage", "Raw Value", "Graded Value", "AI Grade", "Confidence", "Best Route"];
+  const rows = report.cards.map((card) => [
+    cleanText(card.name),
+    card.category,
+    card.set,
+    card.number,
+    cleanText(card.storage),
+    card.rawValue,
+    card.gradedValue,
+    card.grade,
+    card.confidence,
+    bestSellRoute(card).name,
+  ]);
+  const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `cardcortex-${report.slug}-${report.createdDate}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function needsStorageReview(card) {
+  const storageText = String(card.storage || "");
+  return !storageText.trim() || /unassigned|inbox|pending|unknown|loose/i.test(storageText);
+}
+
+function cleanText(value) {
+  return String(value || "").replace(/&middot;/g, " - ").replace(/\s+/g, " ").trim();
+}
+
+function reportTitle(type) {
+  return {
+    insurance: "Insurance Report",
+    seller: "Seller Readiness Report",
+    grading: "Grading Priority Report",
+    audit: "Collection Audit Report",
+  }[type] || "Portfolio Report";
 }
 
 function renderMarketplace() {

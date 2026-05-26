@@ -1,10 +1,11 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v9-sellkit";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v10-reports";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
   "./vault.html",
   "./scanner.html",
   "./pricing.html",
+  "./reports.html",
   "./grading.html",
   "./marketplace.html",
   "./assistant.html",

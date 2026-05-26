@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reports | CardCortex</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#050713" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardCortex" />
+    <link rel="stylesheet" href="./styles.css?v=reports1" />
+  </head>
+  <body data-page="reports">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./auth.html">Account</a>
+        </nav>
+        <a class="nav-cta" href="./vault.html">Open vault</a>
+      </header>
+      <main class="app-page reports-page">
+        <section class="page-heading">
+          <div>
+            <h1>Portfolio reports</h1>
+            <p>Turn your vault into a collector-grade record for insurance, selling, grading priority, storage audit, and export-ready value evidence.</p>
+          </div>
+          <div id="reportHeroMetric" class="value-tile">
+            <small>Replacement estimate</small>
+            <strong>$0</strong>
+            <span>Building report</span>
+          </div>
+        </section>
+
+        <section class="report-control-deck">
+          <div>
+            <h2>Report command center</h2>
+            <p id="reportStatus">Report tools are loading your local vault and signed-in Supabase records.</p>
+          </div>
+          <div class="report-controls">
+            <label>
+              <span>Report type</span>
+              <select id="reportType">
+                <option value="insurance">Insurance report</option>
+                <option value="seller">Seller readiness</option>
+                <option value="grading">Grading priority</option>
+                <option value="audit">Collection audit</option>
+              </select>
+            </label>
+            <label>
+              <span>Scope</span>
+              <select id="reportScope"></select>
+            </label>
+          </div>
+          <div class="report-actions">
+            <button id="exportReportButton" class="primary-button" type="button">Export JSON</button>
+            <button id="exportReportCsvButton" class="secondary-button" type="button">Export CSV</button>
+            <button id="copyReportButton" class="secondary-button" type="button">Copy summary</button>
+            <button id="printReportButton" class="secondary-button" type="button">Print report</button>
+          </div>
+        </section>
+
+        <section id="reportStats" class="report-stat-grid" aria-label="Portfolio report metrics"></section>
+        <section id="reportNarrative" class="report-narrative-grid" aria-label="Report summary and actions"></section>
+
+        <section class="report-exposure-shell">
+          <div>
+            <h2>Category exposure</h2>
+            <p>See where your collection value is concentrated before you insure, grade, sell, or reorganize.</p>
+          </div>
+          <div id="categoryExposure" class="exposure-list"></div>
+        </section>
+
+        <section id="reportTables" class="report-table-grid" aria-label="Report card queues"></section>
+
+        <section class="report-preview-shell">
+          <div>
+            <h2>Export-ready report preview</h2>
+            <p>This is the text summary you can copy into your records, print, or keep with exported JSON and CSV files.</p>
+          </div>
+          <pre id="reportPreviewText" tabindex="0"></pre>
+        </section>
+      </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./supabase-client.js"></script>
+    <script src="./data.js"></script>
+    <script type="module" src="./brand3d.js?v=reports1"></script>
+    <script type="module" src="./page3d.js?v=reports1"></script>
+    <script src="./app.js?v=reports1"></script>
+  </body>
+</html>
