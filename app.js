@@ -25,6 +25,7 @@ if (page === "pricing") renderPricing();
 if (page === "grading") renderGrading();
 if (page === "marketplace") renderMarketplace();
 if (page === "assistant") initAssistant();
+initPwaInstall();
 
 function totalValue(items = cards) {
   return items.reduce((sum, card) => sum + card.rawValue, 0);
@@ -36,6 +37,10 @@ function renderVault() {
   const sort = document.querySelector("#sortSelect");
   const quickAddForm = document.querySelector("#quickAddForm");
   const vaultMode = document.querySelector("#vaultMode");
+  const exportButton = document.querySelector("#exportVaultButton");
+  const binderButton = document.querySelector("#binderViewButton");
+  const commandStatus = document.querySelector("#vaultCommandStatus");
+  let binderMode = false;
   const rerender = () => {
     const categories = ["All categories", ...new Set(cards.map((card) => card.category))];
     const currentFilter = filter.value || "All categories";
@@ -47,7 +52,9 @@ function renderVault() {
       .filter((card) => `${card.name} ${card.category} ${card.set} ${card.storage}`.toLowerCase().includes(query))
       .sort((a, b) => sort.value === "name" ? a.name.localeCompare(b.name) : sort.value === "grade" ? b.grade - a.grade : b.rawValue - a.rawValue);
     document.querySelector("#vaultTotal").textContent = money.format(totalValue(sorted));
-    document.querySelector("#cardGrid").innerHTML = sorted.map(cardTile).join("");
+    const grid = document.querySelector("#cardGrid");
+    grid.classList.toggle("binder-mode", binderMode);
+    grid.innerHTML = sorted.map(cardTile).join("");
     renderStats(sorted);
   };
   activeVaultRender = rerender;
@@ -85,8 +92,45 @@ function renderVault() {
       await deleteVaultCard(remove.dataset.deleteCard);
     }
   });
+  exportButton?.addEventListener("click", () => {
+    exportVaultCsv(cards);
+    if (commandStatus) commandStatus.textContent = "CSV export created with card name, category, set, number, rarity, storage, value, grade, and confidence.";
+  });
+  binderButton?.addEventListener("click", () => {
+    binderMode = !binderMode;
+    binderButton.textContent = binderMode ? "List view" : "Binder view";
+    if (commandStatus) commandStatus.textContent = binderMode ? "Binder view shows cards in collection-page format." : "List view restored for management.";
+    rerender();
+  });
   loadSupabaseCards(vaultMode).then(rerender);
   rerender();
+}
+
+function exportVaultCsv(items) {
+  const headers = ["Name", "Category", "Set", "Number", "Rarity", "Storage", "Raw Value", "Graded Value", "AI Grade", "AI Confidence"];
+  const rows = items.map((card) => [
+    card.name,
+    card.category,
+    card.set,
+    card.number,
+    card.rarity,
+    card.storage,
+    card.rawValue,
+    card.gradedValue,
+    card.grade,
+    card.confidence,
+  ]);
+  const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `cardcortex-vault-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
 async function loadSupabaseCards(statusEl) {
@@ -1011,4 +1055,25 @@ function initAssistant() {
     log.insertAdjacentHTML("beforeend", `<article class="${role}">${text}</article>`);
     log.scrollTop = log.scrollHeight;
   }
+}
+
+function initPwaInstall() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
+  let pendingInstall = null;
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    pendingInstall = event;
+    document.querySelectorAll("#installAppButton").forEach((button) => {
+      button.hidden = false;
+    });
+  });
+  document.addEventListener("click", async (event) => {
+    if (!event.target.matches("#installAppButton") || !pendingInstall) return;
+    pendingInstall.prompt();
+    await pendingInstall.userChoice;
+    pendingInstall = null;
+    event.target.hidden = true;
+  });
 }

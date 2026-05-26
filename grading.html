@@ -4,12 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Grading | CardCortex</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#050713" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardCortex" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body data-page="grading">
     <div class="site-shell">
       <header class="topbar">
-        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
           <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./auth.html">Account</a>
         </nav>
@@ -21,13 +26,13 @@
             <h1>Automatic AI grading lab</h1>
             <p>Upload the front and back of a card. CardCortex runs centering, corner, edge, surface, print, and photo-confidence checks automatically.</p>
           </div>
-          <div class="value-tile"><small>Certification preview</small><strong id="certNumber">CC-0000</strong></div>
+          <div class="value-tile"><small>Certification preview</small><strong id="certNumber">Pending scan</strong></div>
         </section>
         <section class="grading-lab">
           <div class="grade-card holo-card">
-            <span id="gradeName">Charizard 4/102</span>
-            <strong id="gradeScore">9.1</strong>
-            <small id="gradeConfidence">AI confidence 88%</small>
+            <span id="gradeName">Upload front and back</span>
+            <strong id="gradeScore">--</strong>
+            <small id="gradeConfidence">No grade generated yet</small>
           </div>
           <div>
             <section class="grade-photo-lab">
@@ -40,6 +45,19 @@
               <div id="gradePhotoPreview" class="grade-photo-preview"></div>
               <button id="runGradeButton" class="primary-button" type="button">Run automatic grade</button>
               <p id="gradePhotoStatus">Waiting for grading photos.</p>
+            </section>
+            <section class="grading-methods">
+              <h2>Grading mechanisms</h2>
+              <div class="method-grid">
+                <article data-grade-method="centering"><strong>Centering</strong><span>Waiting</span></article>
+                <article data-grade-method="corners"><strong>Corners</strong><span>Waiting</span></article>
+                <article data-grade-method="edges"><strong>Edges</strong><span>Waiting</span></article>
+                <article data-grade-method="surface"><strong>Surface</strong><span>Waiting</span></article>
+                <article data-grade-method="print"><strong>Print quality</strong><span>Waiting</span></article>
+                <article data-grade-method="whitening"><strong>Back whitening</strong><span>Waiting</span></article>
+                <article data-grade-method="confidence"><strong>Photo confidence</strong><span>Waiting</span></article>
+                <article data-grade-method="certificate"><strong>Certificate</strong><span>Waiting</span></article>
+              </div>
             </section>
             <section id="gradeReport" class="grade-report" hidden></section>
             <div id="gradeBreakdown" class="grade-breakdown"></div>

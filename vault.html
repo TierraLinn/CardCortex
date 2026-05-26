@@ -4,12 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Vault | CardCortex</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#050713" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardCortex" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body data-page="vault">
     <div class="site-shell">
       <header class="topbar">
-        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
           <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./auth.html">Account</a>
         </nav>
@@ -34,6 +39,12 @@
             <option value="grade">Sort by AI grade</option>
             <option value="name">Sort by name</option>
           </select>
+        </section>
+        <section class="vault-command-deck">
+          <button id="exportVaultButton" class="secondary-button" type="button">Export CSV</button>
+          <button id="binderViewButton" class="secondary-button" type="button">Binder view</button>
+          <button id="installAppButton" class="primary-button" type="button" hidden>Install app</button>
+          <p id="vaultCommandStatus">Vault tools ready for portfolio cleanup, export, and phone install prep.</p>
         </section>
         <section class="save-panel">
           <div>

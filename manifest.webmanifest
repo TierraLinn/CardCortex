@@ -1,0 +1,24 @@
+{
+  "name": "CardCortex",
+  "short_name": "CardCortex",
+  "description": "AI trading card vault, scanner, grading lab, value intelligence, and selling assistant.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#050713",
+  "theme_color": "#050713",
+  "icons": [
+    {
+      "src": "./app-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Scan Card", "url": "./scanner.html", "description": "Open the card scanner." },
+    { "name": "Vault", "url": "./vault.html", "description": "Open your card vault." },
+    { "name": "AI Grading", "url": "./grading.html", "description": "Open the grading lab." }
+  ]
+}
