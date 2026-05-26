@@ -24,14 +24,17 @@ if (!skipPages.has(page)) {
   const cyan = new THREE.PointLight(0x5eead4, 2.8, 24);
   cyan.position.set(4, 2, 5);
   scene.add(cyan);
-  const rose = new THREE.PointLight(0xed254e, 2.4, 24);
-  rose.position.set(-3, -1, 5);
-  scene.add(rose);
+  const rift = new THREE.PointLight(0x1f5a84, 2.7, 24);
+  rift.position.set(-3, -1, 5);
+  scene.add(rift);
+  const ember = new THREE.PointLight(0xf5b335, 1.2, 18);
+  ember.position.set(1, -3, 4);
+  scene.add(ember);
 
   const pointer = new THREE.Vector2();
   const target = new THREE.Vector2();
   const cards = [];
-  const palette = ["#2f80ed", "#14b8a6", "#f5b335", "#ed254e", "#7c5cff"];
+  const palette = ["#76f7ff", "#f7fbff", "#1f5a84", "#061a2d", "#f5b335"];
   const labels = {
     vault: ["Vault", "Binder", "Slab", "Value"],
     scanner: ["Scan", "Match", "Review", "Save"],
@@ -125,7 +128,7 @@ if (!skipPages.has(page)) {
       positions[i * 3 + 2] = -Math.random() * 8;
     }
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x7c5cff, size: 0.022, transparent: true, opacity: 0.38 }));
+    return new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x76f7ff, size: 0.022, transparent: true, opacity: 0.32 }));
   }
 
   function roundRect(ctx, x, y, w, h, r) {

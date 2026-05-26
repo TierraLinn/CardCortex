@@ -1,28 +1,27 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">CardCortex Prism Mark</title>
-  <desc id="desc">A luminous trading card prism surrounded by orbital scan rings.</desc>
+  <title id="title">CardCortex Rift Prism Mark</title>
+  <desc id="desc">A dark dimensional trading card prism with orbital scan rings and a luminous cortex core.</desc>
   <defs>
-    <radialGradient id="bg" cx="28%" cy="20%" r="82%">
+    <radialGradient id="bg" cx="34%" cy="18%" r="88%">
       <stop offset="0" stop-color="#76f7ff"/>
-      <stop offset=".28" stop-color="#7c5cff"/>
-      <stop offset=".58" stop-color="#ed254e"/>
-      <stop offset="1" stop-color="#050713"/>
+      <stop offset=".18" stop-color="#1f5a84"/>
+      <stop offset=".62" stop-color="#061a2d"/>
+      <stop offset="1" stop-color="#01030a"/>
     </radialGradient>
     <linearGradient id="card" x1="116" y1="76" x2="402" y2="442">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset=".18" stop-color="#76f7ff"/>
-      <stop offset=".46" stop-color="#14b8a6"/>
-      <stop offset=".72" stop-color="#f5b335"/>
-      <stop offset="1" stop-color="#ed254e"/>
+      <stop offset="0" stop-color="#f7fbff"/>
+      <stop offset=".16" stop-color="#76f7ff"/>
+      <stop offset=".52" stop-color="#1f5a84"/>
+      <stop offset="1" stop-color="#050713"/>
     </linearGradient>
     <linearGradient id="edge" x1="118" y1="54" x2="398" y2="466">
       <stop offset="0" stop-color="#ffffff"/>
-      <stop offset=".42" stop-color="#76f7ff"/>
-      <stop offset="1" stop-color="#7c5cff"/>
+      <stop offset=".46" stop-color="#76f7ff"/>
+      <stop offset="1" stop-color="#f5b335"/>
     </linearGradient>
     <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
       <feGaussianBlur stdDeviation="12" result="blur"/>
-      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.45 0 0 0 0 0.97 0 0 0 0 1 0 0 0 .8 0"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.45 0 0 0 0 0.97 0 0 0 0 1 0 0 0 .72 0"/>
       <feMerge>
         <feMergeNode/>
         <feMergeNode in="SourceGraphic"/>
@@ -30,22 +29,24 @@
     </filter>
   </defs>
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <path d="M56 260c44-122 147-188 302-199 66-5 103 12 98 45-8 51-91 48-181 75-96 29-171 87-219 79Z" fill="#fff" opacity=".12"/>
+  <path d="M51 260c48-126 151-193 309-204 69-5 108 13 101 48-9 54-92 50-184 78-99 30-176 91-226 78Z" fill="#f7fbff" opacity=".1"/>
   <g fill="none" stroke-linecap="round" filter="url(#glow)">
-    <path d="M70 274c60 111 234 154 349 67" stroke="#76f7ff" stroke-width="8" opacity=".72"/>
-    <path d="M92 166c91-90 259-93 336 10" stroke="#f5b335" stroke-width="7" opacity=".64"/>
-    <path d="M87 358c100 68 247 65 338-31" stroke="#ed254e" stroke-width="6" opacity=".68"/>
+    <path d="M66 271c61 113 239 157 356 69" stroke="#76f7ff" stroke-width="9" opacity=".76"/>
+    <path d="M91 159c94-92 263-94 342 12" stroke="#f5b335" stroke-width="6" opacity=".48"/>
+    <path d="M83 359c103 67 254 63 343-35" stroke="#f7fbff" stroke-width="4" opacity=".46"/>
   </g>
   <g transform="translate(256 258) rotate(-10) translate(-256 -258)">
-    <rect x="150" y="76" width="212" height="336" rx="28" fill="#080b16" opacity=".72"/>
-    <rect x="132" y="58" width="212" height="336" rx="28" fill="url(#card)" stroke="url(#edge)" stroke-width="10"/>
-    <rect x="156" y="92" width="164" height="122" rx="18" fill="#070914" opacity=".78"/>
-    <path d="M176 182c44-78 96-79 128-6-49-21-86-14-128 6Z" fill="#76f7ff" opacity=".86"/>
-    <path d="M166 255h144M166 286h103M166 318h129" stroke="#07111f" stroke-width="16" stroke-linecap="round" opacity=".75"/>
-    <circle cx="306" cy="352" r="22" fill="#07111f" opacity=".82"/>
-    <circle cx="306" cy="352" r="11" fill="#76f7ff"/>
+    <rect x="154" y="76" width="216" height="340" rx="31" fill="#01030a" opacity=".8"/>
+    <rect x="132" y="58" width="216" height="340" rx="31" fill="url(#card)" stroke="url(#edge)" stroke-width="10"/>
+    <rect x="158" y="94" width="164" height="122" rx="20" fill="#01030a" opacity=".82"/>
+    <path d="M176 184c45-79 99-81 130-5-50-23-87-15-130 5Z" fill="#76f7ff" opacity=".86"/>
+    <path d="M169 254h143M169 286h104M169 318h130" stroke="#01030a" stroke-width="16" stroke-linecap="round" opacity=".74"/>
+    <circle cx="307" cy="353" r="23" fill="#01030a" opacity=".86"/>
+    <circle cx="307" cy="353" r="11" fill="#76f7ff"/>
   </g>
-  <path d="M95 111 78 150l-40 16 40 15 17 40 16-40 40-15-40-16-16-39Z" fill="#fff" opacity=".9"/>
-  <path d="M423 84 411 112l-28 12 28 12 12 28 12-28 28-12-28-12-12-28Z" fill="#76f7ff"/>
-  <path d="M420 364 405 400l-36 15 36 15 15 36 15-36 36-15-36-15-15-36Z" fill="#f5b335"/>
+  <g fill="#f7fbff">
+    <path d="M95 111 78 150l-40 16 40 15 17 40 16-40 40-15-40-16-16-39Z" opacity=".88"/>
+    <path d="M423 84 411 112l-28 12 28 12 12 28 12-28 28-12-28-12-12-28Z" opacity=".72"/>
+  </g>
+  <path d="M420 364 405 400l-36 15 36 15 15 36 15-36 36-15-36-15-15-36Z" fill="#f5b335" opacity=".9"/>
 </svg>

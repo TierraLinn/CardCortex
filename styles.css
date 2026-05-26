@@ -7,9 +7,11 @@
   --blue: #2f80ed;
   --green: #14b8a6;
   --amber: #f5b335;
-  --pink: #ed254e;
-  --violet: #7c5cff;
+  --signal: #1f5a84;
+  --void: #01030a;
   --cyan: #76f7ff;
+  --rift: #061a2d;
+  --rift-core: #0a0d18;
   --deep: #050713;
   --panel: rgba(8, 14, 34, 0.74);
   --shadow: 0 28px 100px rgba(0, 0, 0, 0.36);
@@ -23,10 +25,10 @@ body {
   color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at var(--mx, 70%) var(--my, 16%), rgba(118, 247, 255, 0.22), transparent 18rem),
-    radial-gradient(circle at 18% 10%, rgba(124, 92, 255, 0.34), transparent 31rem),
-    radial-gradient(circle at 84% 28%, rgba(237, 37, 78, 0.24), transparent 28rem),
-    linear-gradient(135deg, #050713 0%, #0b1024 42%, #111629 100%);
+    radial-gradient(circle at var(--mx, 68%) var(--my, 18%), rgba(118, 247, 255, 0.18), transparent 20rem),
+    radial-gradient(ellipse at 18% 6%, rgba(31, 90, 132, 0.32), transparent 34rem),
+    radial-gradient(ellipse at 88% 24%, rgba(245, 179, 53, 0.12), transparent 24rem),
+    linear-gradient(145deg, #01030a 0%, #050713 42%, #061a2d 100%);
   overflow-x: hidden;
 }
 
@@ -37,8 +39,9 @@ body::before {
   z-index: -2;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(118,247,255,0.06) 0 1px, transparent 1px 96px),
-    linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 96px);
+    linear-gradient(90deg, rgba(118,247,255,0.05) 0 1px, transparent 1px 96px),
+    linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 96px),
+    radial-gradient(circle at 50% 46%, rgba(118,247,255,0.08), transparent 38rem);
   mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), #000, transparent 78%);
 }
 
@@ -72,20 +75,60 @@ button, .upload-button { cursor: pointer; }
   backdrop-filter: blur(20px);
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
 }
-.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 900; }
+.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 950; letter-spacing: .01em; }
 .brand-glyph {
   display: grid;
-  width: 50px;
+  position: relative;
+  width: 68px;
   aspect-ratio: 1;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   color: transparent;
-  border: 1px solid rgba(118, 247, 255, 0.38);
-  border-radius: 12px;
+  isolation: isolate;
+  perspective: 700px;
+  border: 1px solid rgba(118, 247, 255, 0.34);
+  border-radius: 18px;
   background:
     url("./app-icon.svg") center / cover no-repeat,
-    conic-gradient(from 20deg, var(--blue), var(--green), var(--amber), var(--pink), var(--violet), var(--blue));
-  box-shadow: 0 0 34px rgba(118, 247, 255, 0.34), inset 0 0 18px rgba(255,255,255,0.16);
+    radial-gradient(circle at 50% 50%, rgba(118,247,255,0.18), rgba(5,7,19,0.86) 58%, rgba(1,3,10,0.96));
+  box-shadow:
+    0 0 42px rgba(118, 247, 255, 0.28),
+    0 22px 54px rgba(0,0,0,0.34),
+    inset 0 0 22px rgba(255,255,255,0.1);
+}
+
+.brand-glyph::before,
+.brand-glyph::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 24px;
+  background:
+    conic-gradient(from var(--brand-spin, 0deg), transparent, rgba(118,247,255,.42), transparent, rgba(245,179,53,.26), transparent);
+  filter: blur(10px);
+  opacity: .72;
+  animation: brandHalo 6s linear infinite;
+}
+
+.brand-glyph::after {
+  inset: 8px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: radial-gradient(circle, rgba(255,255,255,.16), transparent 62%);
+  filter: none;
+  opacity: .54;
+  animation: none;
+}
+
+.brand-3d-canvas {
+  position: absolute;
+  inset: -14px;
+  z-index: 2;
+  width: calc(100% + 28px);
+  height: calc(100% + 28px);
+  display: block;
+  pointer-events: none;
 }
 nav { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 nav a, .nav-cta, .primary-button, .secondary-button, .upload-button {
@@ -127,11 +170,11 @@ nav a.active { color: var(--ink); background: rgba(118, 247, 255, 0.12); }
   color: #fff;
   border-radius: 8px;
   background:
-    radial-gradient(circle at 18% 20%, rgba(124, 92, 255, 0.5), transparent 28rem),
-    radial-gradient(circle at 82% 30%, rgba(20, 184, 166, 0.42), transparent 24rem),
-    radial-gradient(circle at 58% 80%, rgba(237, 37, 78, 0.38), transparent 28rem),
-    #07090f;
-  box-shadow: 0 30px 120px rgba(7, 9, 15, 0.38);
+    radial-gradient(circle at 72% 30%, rgba(118, 247, 255, 0.2), transparent 23rem),
+    radial-gradient(circle at 36% 72%, rgba(16, 44, 78, 0.82), transparent 32rem),
+    radial-gradient(circle at 88% 82%, rgba(245, 179, 53, 0.1), transparent 24rem),
+    linear-gradient(135deg, #01030a 0%, #050713 48%, #061a2d 100%);
+  box-shadow: 0 30px 120px rgba(1, 3, 10, 0.5);
 }
 
 .next-hero::before {
@@ -141,8 +184,8 @@ nav a.active { color: var(--ink); background: rgba(118, 247, 255, 0.12); }
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(7, 9, 15, 0.92) 0%, rgba(7, 9, 15, 0.82) 26%, rgba(7, 9, 15, 0.34) 55%, rgba(7, 9, 15, 0.05) 100%),
-    linear-gradient(0deg, rgba(7, 9, 15, 0.62) 0%, transparent 28%);
+    linear-gradient(90deg, rgba(1, 3, 10, 0.96) 0%, rgba(5, 7, 19, 0.86) 28%, rgba(5, 7, 19, 0.42) 58%, rgba(5, 7, 19, 0.08) 100%),
+    linear-gradient(0deg, rgba(1, 3, 10, 0.72) 0%, transparent 32%);
 }
 
 #cortexCanvas {
@@ -161,7 +204,7 @@ nav a.active { color: var(--ink); background: rgba(118, 247, 255, 0.12); }
   background:
     linear-gradient(90deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 120px),
     linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 120px),
-    radial-gradient(circle at var(--mx, 50%) var(--my, 40%), rgba(255,255,255,0.18), transparent 18rem);
+    radial-gradient(circle at var(--mx, 50%) var(--my, 40%), rgba(118,247,255,0.16), transparent 18rem);
   mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.7) 44%, rgba(0,0,0,0.18) 74%, #000 100%);
   animation: auroraPulse 8s ease-in-out infinite;
 }
@@ -237,7 +280,7 @@ nav a.active { color: var(--ink); background: rgba(118, 247, 255, 0.12); }
   width: 58%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--pink), var(--amber), var(--green), #76f7ff);
+  background: linear-gradient(90deg, #f7fbff, #76f7ff, #f5b335);
   transition: width 180ms ease;
 }
 
@@ -329,7 +372,7 @@ nav a.active { color: var(--ink); background: rgba(118, 247, 255, 0.12); }
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(255,255,255,0.22), transparent 32%),
-    conic-gradient(from 120deg, var(--blue), var(--green), var(--amber), var(--pink), var(--violet), var(--blue));
+    radial-gradient(circle at 42% 26%, #f7fbff, #76f7ff 24%, #061a2d 62%, #01030a);
   box-shadow: 0 30px 80px rgba(16, 19, 22, 0.28);
   animation: float 5s ease-in-out infinite;
 }
@@ -341,7 +384,7 @@ nav a.active { color: var(--ink); background: rgba(118, 247, 255, 0.12); }
   right: 0;
   top: 20%;
   height: 4px;
-  background: linear-gradient(90deg, transparent, var(--green), #fff, var(--pink), transparent);
+  background: linear-gradient(90deg, transparent, var(--cyan), #fff, var(--amber), transparent);
   box-shadow: 0 0 26px rgba(20, 184, 166, 0.8);
   animation: scan 3.2s ease-in-out infinite;
 }
@@ -676,7 +719,7 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 .grade-breakdown article { padding: 15px; }
 .grade-breakdown div { display: flex; justify-content: space-between; margin-bottom: 10px; }
 .grade-breakdown b { display: block; height: 12px; border-radius: 999px; background: #e8edf5; overflow: hidden; }
-.grade-breakdown i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--pink), var(--amber), var(--green)); }
+.grade-breakdown i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--signal), var(--cyan), var(--amber)); }
 
 .grade-photo-lab {
   padding: 18px;
@@ -1097,6 +1140,10 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   }
 }
 
+@keyframes brandHalo {
+  to { --brand-spin: 360deg; transform: rotate(360deg); }
+}
+
 @media (max-width: 920px) {
   .topbar, .page-heading { align-items: stretch; flex-direction: column; }
   nav { justify-content: flex-start; }
@@ -1122,6 +1169,7 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 @media (max-width: 620px) {
   .site-shell { width: 100%; max-width: 100vw; padding: 12px; overflow: hidden; }
   .topbar { top: 8px; }
+  .brand-glyph { width: 58px; }
   nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   nav a { justify-content: center; }
   .nav-cta { width: 100%; }

@@ -13,7 +13,7 @@ window.CardCortexData = {
       grade: 9.1,
       confidence: 88,
       sources: { eBay: 452, TCGPlayer: 421, PriceCharting: 441, Cardmarket: 398 },
-      color: "#ff7a45",
+      color: "#1f5a84",
     },
     {
       id: "mtg-lotus",
@@ -28,7 +28,7 @@ window.CardCortexData = {
       grade: 8.7,
       confidence: 81,
       sources: { eBay: 69, TCGPlayer: 74, PriceCharting: 71, Cardmarket: 64 },
-      color: "#7c5cff",
+      color: "#76f7ff",
     },
     {
       id: "marvel-spidey",
@@ -43,7 +43,7 @@ window.CardCortexData = {
       grade: 8.9,
       confidence: 84,
       sources: { eBay: 132, TCGPlayer: 0, PriceCharting: 119, Cardmarket: 0 },
-      color: "#ed254e",
+      color: "#f5b335",
     },
     {
       id: "dbz-goku",
@@ -88,7 +88,7 @@ window.CardCortexData = {
       grade: 8.5,
       confidence: 79,
       sources: { eBay: 16, TCGPlayer: 0, PriceCharting: 20, Cardmarket: 0 },
-      color: "#44c553",
+      color: "#76f7ff",
     },
     {
       id: "buddyfight-jackknife",

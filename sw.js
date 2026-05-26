@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v2-real-grading";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v3-animated-brand";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -12,6 +12,7 @@ const SHELL_ASSETS = [
   "./styles.css",
   "./data.js",
   "./app.js",
+  "./brand3d.js",
   "./hero3d.js",
   "./page3d.js",
   "./app-icon.svg",
