@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v8-cert-library";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v9-sellkit";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

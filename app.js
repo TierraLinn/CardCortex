@@ -1623,11 +1623,21 @@ function renderMarketplace() {
       <div class="chip-row"><span>${market.fee}</span><span>${market.confidence}% route fit</span></div>
       <button class="secondary-button" type="button" data-market="${market.name}">Prepare listing</button>
     </article>`).join("");
-  document.querySelectorAll("[data-market]").forEach((button) => {
-    button.addEventListener("click", () => {
+  document.querySelector("#marketRoutes")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-market]");
+    if (!button) return;
+    const route = document.querySelector("#listingRoute");
+    if (route) route.value = button.dataset.market;
+    document.querySelectorAll("[data-market]").forEach((item) => {
+      item.textContent = item === button ? "Route selected" : "Prepare listing";
+      item.classList.toggle("prepared", item === button);
+    });
+    if (document.querySelector("#listingCardName")?.value.trim()) {
+      document.querySelector("#listingForm")?.requestSubmit();
+    } else {
       button.textContent = "Listing draft prepared";
       button.classList.add("prepared");
-    });
+    }
   });
   initListingStudio();
 }
@@ -1635,6 +1645,9 @@ function renderMarketplace() {
 function initListingStudio() {
   const form = document.querySelector("#listingForm");
   if (!form) return;
+  let activeListingKit = null;
+  const routeSelect = document.querySelector("#listingRoute");
+  routeSelect.innerHTML = marketplaces.map((market) => `<option value="${escapeAttribute(market.name)}">${escapeHtml(market.name)}</option>`).join("");
   const handoff = storage.getItem("cardcortex-listing-card");
   if (handoff) {
     try {
@@ -1642,15 +1655,177 @@ function initListingStudio() {
       document.querySelector("#listingCardName").value = card.name || "";
       document.querySelector("#listingCondition").value = card.condition || "";
       document.querySelector("#listingPrice").value = card.price || "";
+      const cert = /CC-AI-\d{4}-[A-Z0-9]+/.exec(card.condition || "");
+      document.querySelector("#listingCert").value = cert?.[0] || "";
+      const route = recommendedMarketForText(`${card.name || ""} ${card.condition || ""}`);
+      if (routeSelect && route) routeSelect.value = route.name;
     } catch {}
   }
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const name = document.querySelector("#listingCardName").value.trim() || "Trading card";
-    const condition = document.querySelector("#listingCondition").value.trim() || "reviewed condition with clear front and back photos";
-    const price = Number(document.querySelector("#listingPrice").value || 0);
-    document.querySelector("#listingOutput").value = `${name} - CardCortex listing draft\n\nCondition: ${condition}.\nTarget price: ${price ? money.format(price) : "set after reviewing comps"}.\n\nInclude front photo, back photo, corner inspection, surface/glare notes, storage history, and CardCortex pre-grade notes.\n\nRecommended strategy: honest condition-first title, sold-comps price range, clear shipping terms, and no official grading claim unless the card is graded by a recognized grading company.`;
+    activeListingKit = buildListingKit();
+    renderListingLaunchKit(activeListingKit);
   });
+  document.querySelector("#copyListingButton")?.addEventListener("click", async () => {
+    const output = document.querySelector("#listingOutput");
+    if (!output?.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      document.querySelector("#copyListingButton").textContent = "Copied";
+    } catch {
+      output.focus();
+      output.select();
+      document.querySelector("#copyListingButton").textContent = "Select and copy";
+    }
+  });
+  document.querySelector("#exportListingButton")?.addEventListener("click", () => {
+    const kit = activeListingKit || buildListingKit();
+    exportJson(kit, `cardcortex-listing-kit-${slugify(kit.name)}.json`);
+  });
+  if (document.querySelector("#listingCardName").value.trim()) form.requestSubmit();
+}
+
+function buildListingKit() {
+  const name = document.querySelector("#listingCardName").value.trim() || "Trading card";
+  const condition = document.querySelector("#listingCondition").value.trim() || "reviewed condition with clear front and back photos";
+  const targetPrice = Number(document.querySelector("#listingPrice").value || 0);
+  const routeName = document.querySelector("#listingRoute").value || marketplaces[0].name;
+  const format = document.querySelector("#listingFormat").value || "fixed";
+  const cert = document.querySelector("#listingCert").value.trim();
+  const route = marketplaces.find((market) => market.name === routeName) || marketplaces[0];
+  const priceBand = listingPriceBand(targetPrice, format, route);
+  const titleOptions = listingTitleOptions(name, cert, route, format);
+  const photoChecklist = [
+    "Front full card, straight and uncropped",
+    "Back full card, straight and uncropped",
+    "Four corner close-ups",
+    "All four edge close-ups",
+    "Surface/glare angle photo",
+    "Certificate or pre-grade screenshot if included",
+  ];
+  const shippingChecklist = route.name.includes("COMC")
+    ? ["Sleeve and top loader", "Team bag", "Submit with card inventory sheet", "Photograph package contents before shipping"]
+    : ["Penny sleeve", "Top loader or semi-rigid holder", "Team bag", "Rigid mailer or box", "Tracking number", "Signature or insurance for higher value cards"];
+  const riskNotes = listingRiskNotes(route, format, targetPrice, cert);
+  const copy = `${titleOptions[0]}\n\nCondition: ${condition}.\n${cert ? `CardCortex certificate / grade note: ${cert}.\n` : ""}Target route: ${route.name} (${route.bestFor}).\nSuggested format: ${formatLabel(format)}.\nPricing band: ${priceBand.low ? `${money.format(priceBand.low)} - ${money.format(priceBand.high)}` : "set after reviewing sold comps"}.\n\nPhotos included/needed: ${photoChecklist.join("; ")}.\n\nShipping: ${shippingChecklist.join("; ")}.\n\nSeller note: Use honest condition language, show clear front/back photos, include any defects you can see, and avoid claiming an official third-party grade unless the card has one.`;
+  const kit = {
+    name,
+    route: route.name,
+    routeFit: route.confidence,
+    saleFormat: formatLabel(format),
+    targetPrice,
+    priceBand,
+    titleOptions,
+    condition,
+    certificate: cert,
+    photoChecklist,
+    shippingChecklist,
+    riskNotes,
+    listingCopy: copy,
+    createdAt: new Date().toISOString(),
+  };
+  storage.setItem("cardcortex-listing-kit", JSON.stringify(kit));
+  return kit;
+}
+
+function renderListingLaunchKit(kit) {
+  document.querySelector("#listingOutput").value = kit.listingCopy;
+  const target = document.querySelector("#listingLaunchKit");
+  if (!target) return;
+  target.innerHTML = `
+    <article class="launch-summary">
+      <small>Recommended route</small>
+      <strong>${escapeHtml(kit.route)}</strong>
+      <span>${kit.routeFit}% route fit</span>
+    </article>
+    <article class="launch-summary">
+      <small>Price band</small>
+      <strong>${kit.priceBand.low ? `${money.format(kit.priceBand.low)} - ${money.format(kit.priceBand.high)}` : "Research comps"}</strong>
+      <span>${escapeHtml(kit.saleFormat)}</span>
+    </article>
+    <article class="launch-summary">
+      <small>Launch readiness</small>
+      <strong>${kit.certificate ? "Certificate-ready" : "Photo-ready"}</strong>
+      <span>${kit.photoChecklist.length} photo checks</span>
+    </article>
+    <div class="launch-section">
+      <h3>Title options</h3>
+      ${kit.titleOptions.map((title) => `<button class="copy-chip" type="button" data-copy-text="${escapeAttribute(title)}">${escapeHtml(title)}</button>`).join("")}
+    </div>
+    <div class="launch-section">
+      <h3>Photo checklist</h3>
+      <ul>${kit.photoChecklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </div>
+    <div class="launch-section">
+      <h3>Shipping checklist</h3>
+      <ul>${kit.shippingChecklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </div>
+    <div class="launch-section">
+      <h3>Risk notes</h3>
+      <ul>${kit.riskNotes.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </div>
+  `;
+  target.querySelectorAll("[data-copy-text]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const text = button.dataset.copyText;
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "Copied title";
+      } catch {
+        document.querySelector("#listingOutput").value = text;
+      }
+    });
+  });
+}
+
+function listingPriceBand(price, format, route) {
+  if (!price) return { low: 0, high: 0, anchor: 0 };
+  const feeDrag = route.confidence >= 90 ? 0.94 : route.confidence >= 80 ? 0.9 : 0.84;
+  const formatSpread = { fixed: [0.94, 1.12], auction: [0.72, 1.18], offer: [0.88, 1.18], bundle: [0.78, 1.04] }[format] || [0.9, 1.1];
+  return {
+    low: Math.max(1, Math.round(price * formatSpread[0] * feeDrag)),
+    high: Math.max(1, Math.round(price * formatSpread[1])),
+    anchor: price,
+  };
+}
+
+function listingTitleOptions(name, cert, route, format) {
+  const gradeText = cert ? ` ${cert}` : "";
+  const suffix = format === "auction" ? "Auction Ready" : format === "bundle" ? "Collector Lot" : "Clear Photos";
+  return [
+    `${name}${gradeText} - ${route.name} Listing - ${suffix}`,
+    `${name}${cert ? ` | ${cert}` : ""} | Front/Back Photos | Condition Reviewed`,
+    `${name} Trading Card ${route.name.includes("eBay") ? "Sold-Comps Ready" : "Collector Ready"}`,
+  ];
+}
+
+function listingRiskNotes(route, format, price, cert) {
+  const notes = [
+    "Confirm latest sold comps before publishing the final price.",
+    "Disclose visible defects plainly in the description and photos.",
+    "Do not describe the card as officially graded unless it has an official third-party grade.",
+  ];
+  if (format === "auction") notes.push("Auction format can underperform without enough watchers; use a reserve or strong starting price for rare cards.");
+  if (price >= 250) notes.push("Use insured tracked shipping and photograph the packaging process.");
+  if (route.name.includes("Collector")) notes.push("Community sales need extra trust signals: timestamp photo, clear terms, and payment protection.");
+  if (cert) notes.push("Include the CardCortex certificate as a condition-supporting estimate, not as an official slab replacement.");
+  return notes;
+}
+
+function recommendedMarketForText(text) {
+  const normalized = text.toLowerCase();
+  if (/magic|pokemon|yu-gi|tcgplayer/.test(normalized)) return marketplaces.find((market) => market.name === "TCGPlayer");
+  if (/sports|jordan|upper deck|panini|topps|consignment/.test(normalized)) return marketplaces.find((market) => market.name.includes("COMC"));
+  if (/marvel|spider|bakugan|buddyfight|minecraft|community/.test(normalized)) return marketplaces.find((market) => market.name === "Collector communities");
+  return marketplaces.find((market) => market.name === "eBay") || marketplaces[0];
+}
+
+function formatLabel(format) {
+  return { fixed: "Fixed price", auction: "Auction", offer: "Best offer", bundle: "Bundle / lot" }[format] || format;
+}
+
+function slugify(value) {
+  return String(value || "card").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "card";
 }
 
 function initAssistant() {
