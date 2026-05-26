@@ -4,6 +4,8 @@ const signUpButton = document.querySelector("#signUpButton");
 const signOutButton = document.querySelector("#signOutButton");
 const authStatus = document.querySelector("#authStatus");
 const sessionStatus = document.querySelector("#sessionStatus");
+const accountPlanSummary = document.querySelector("#accountPlanSummary");
+const billing = window.CardCortexBilling || null;
 
 async function refreshSession() {
   if (!api) {
@@ -12,6 +14,7 @@ async function refreshSession() {
   }
   const user = await api.getUser();
   sessionStatus.textContent = user ? `Signed in as ${user.email}` : "Not signed in.";
+  renderAccountPlan(user);
 }
 
 authForm.addEventListener("submit", async (event) => {
@@ -40,3 +43,22 @@ signOutButton.addEventListener("click", async () => {
 });
 
 refreshSession();
+
+function renderAccountPlan(user) {
+  if (!accountPlanSummary || !billing) return;
+  const summary = billing.getUsageSummary(0);
+  const plan = summary.plan;
+  const status = user ? "Signed in and ready for paid entitlement sync." : "Sign in before paid entitlements can be connected to your vault.";
+  accountPlanSummary.innerHTML = `
+    <div class="account-plan-badge">
+      <span>${plan.badge}</span>
+      <strong>${plan.name}</strong>
+    </div>
+    <p>${status}</p>
+    <div class="chip-row">
+      <span>${billing.formatLimit(plan.cardLimit, "cards")}</span>
+      <span>${billing.formatLimit(plan.gradeLimit, "AI grades/month")}</span>
+      <span>${billing.formatLimit(plan.scanLimit, "scans/month")}</span>
+    </div>
+  `;
+}

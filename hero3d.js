@@ -32,15 +32,19 @@ if (canvas && hero) {
   key.position.set(-3, 4, 6);
   scene.add(key);
 
-  const magenta = new THREE.PointLight(0xff3cab, 3.2, 24);
-  magenta.position.set(4, -1, 4);
-  scene.add(magenta);
+  const rift = new THREE.PointLight(0x1f5a84, 3.2, 24);
+  rift.position.set(4, -1, 4);
+  scene.add(rift);
+
+  const ember = new THREE.PointLight(0xf5b335, 1.5, 18);
+  ember.position.set(1.5, -3, 3.5);
+  scene.add(ember);
 
   const starGeometry = new THREE.BufferGeometry();
   const starCount = 900;
   const starPositions = new Float32Array(starCount * 3);
   const starColors = new Float32Array(starCount * 3);
-  const palette = [new THREE.Color("#7c5cff"), new THREE.Color("#14b8a6"), new THREE.Color("#f5b335"), new THREE.Color("#ed254e"), new THREE.Color("#2f80ed")];
+  const palette = [new THREE.Color("#76f7ff"), new THREE.Color("#f7fbff"), new THREE.Color("#1f5a84"), new THREE.Color("#061a2d"), new THREE.Color("#f5b335")];
   for (let i = 0; i < starCount; i += 1) {
     const radius = 4 + Math.random() * 7;
     const angle = Math.random() * Math.PI * 2;
@@ -87,7 +91,7 @@ if (canvas && hero) {
 
   const ringTwo = ring.clone();
   ringTwo.scale.setScalar(1.35);
-  ringTwo.material = new THREE.MeshBasicMaterial({ color: 0xff3cab, transparent: true, opacity: 0.2 });
+  ringTwo.material = new THREE.MeshBasicMaterial({ color: 0xf5b335, transparent: true, opacity: 0.18 });
   group.add(ringTwo);
 
   function makeCardTexture(card) {
@@ -96,10 +100,11 @@ if (canvas && hero) {
     c.height = 900;
     const ctx = c.getContext("2d");
     const gradient = ctx.createLinearGradient(0, 0, 640, 900);
-    gradient.addColorStop(0, card.color || "#2f80ed");
-    gradient.addColorStop(0.35, "#f5b335");
-    gradient.addColorStop(0.62, "#14b8a6");
-    gradient.addColorStop(1, "#111827");
+    gradient.addColorStop(0, "#f7fbff");
+    gradient.addColorStop(0.16, "#76f7ff");
+    gradient.addColorStop(0.46, card.color || "#1f5a84");
+    gradient.addColorStop(0.72, "#061a2d");
+    gradient.addColorStop(1, "#01030a");
     ctx.fillStyle = gradient;
     roundRect(ctx, 0, 0, 640, 900, 42);
     ctx.fill();
