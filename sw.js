@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v10-reports";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v13-monetize";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -6,12 +6,14 @@ const SHELL_ASSETS = [
   "./scanner.html",
   "./pricing.html",
   "./reports.html",
+  "./upgrade.html",
   "./grading.html",
   "./marketplace.html",
   "./assistant.html",
   "./auth.html",
   "./styles.css",
   "./data.js",
+  "./billing.js",
   "./app.js",
   "./brand3d.js",
   "./hero3d.js",

@@ -4,19 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sell | CardCortex</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#050713" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="CardCortex" />
-    <link rel="stylesheet" href="./styles.css?v=reports1" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body data-page="marketplace">
     <div class="site-shell">
       <header class="topbar">
-        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
+        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
-          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./auth.html">Account</a>
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./auth.html">Account</a>
         </nav>
         <a class="nav-cta" href="./assistant.html">Ask AI</a>
       </header>
@@ -35,28 +30,14 @@
             <input id="listingCardName" type="text" placeholder="Card name" />
             <input id="listingCondition" type="text" placeholder="Condition notes" />
             <input id="listingPrice" type="number" min="0" step="1" placeholder="Target price" />
-            <input id="listingCert" type="text" placeholder="Certificate number or grade" />
-            <select id="listingRoute"></select>
-            <select id="listingFormat">
-              <option value="fixed">Fixed price</option>
-              <option value="auction">Auction</option>
-              <option value="offer">Best offer</option>
-              <option value="bundle">Bundle / lot</option>
-            </select>
-            <button class="primary-button" type="submit">Generate launch kit</button>
+            <button class="primary-button" type="submit">Generate listing</button>
           </form>
-          <section id="listingLaunchKit" class="listing-launch-kit" aria-live="polite"></section>
           <textarea id="listingOutput" readonly placeholder="Generated listing copy will appear here."></textarea>
-          <div class="listing-actions">
-            <button id="copyListingButton" class="secondary-button" type="button">Copy listing copy</button>
-            <button id="exportListingButton" class="secondary-button" type="button">Export launch kit</button>
-          </div>
         </section>
       </main>
     </div>
     <script src="./data.js"></script>
-    <script type="module" src="./brand3d.js?v=reports1"></script>
-    <script type="module" src="./page3d.js?v=reports1"></script>
-    <script src="./app.js?v=reports1"></script>
+    <script type="module" src="./page3d.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>

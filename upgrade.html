@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Upgrade | CardCortex</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#050713" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardCortex" />
+    <link rel="stylesheet" href="./styles.css?v=monetize1" />
+  </head>
+  <body data-page="upgrade">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a><a href="./auth.html">Account</a>
+        </nav>
+        <a class="nav-cta" href="./auth.html">Account</a>
+      </header>
+      <main class="app-page upgrade-page">
+        <section class="page-heading upgrade-hero">
+          <div>
+            <h1>Turn CardCortex into income.</h1>
+            <p>Affordable subscriptions, usage limits, AI grading credits, and Stripe checkout slots are now wired into the app foundation.</p>
+            <div class="billing-toggle" role="group" aria-label="Billing interval">
+              <button type="button" data-billing-interval="monthly">Monthly</button>
+              <button type="button" data-billing-interval="yearly">Yearly</button>
+            </div>
+          </div>
+          <div class="value-tile">
+            <small>Current plan</small>
+            <strong id="upgradeCurrentPlan">Free Vault</strong>
+            <span id="upgradeCurrentMeta">Plan usage loading</span>
+          </div>
+        </section>
+
+        <section id="upgradeUsage" class="plan-usage-board" aria-label="Current plan usage"></section>
+        <section id="upgradePlanGrid" class="upgrade-plan-grid" aria-label="CardCortex subscription plans"></section>
+
+        <section class="upgrade-addons-shell">
+          <div>
+            <h2>AI grading credit add-ons</h2>
+            <p>Add extra grading runs without forcing every collector into a higher monthly plan.</p>
+          </div>
+          <div id="upgradeAddOns" class="upgrade-addons"></div>
+        </section>
+
+        <section class="stripe-setup-shell">
+          <div>
+            <h2>Stripe launch console</h2>
+            <p>Paste public Stripe Payment Link URLs here for testing. For the real public app, send me those public links and I will lock them into the deployed files.</p>
+          </div>
+          <form id="stripeLinkForm" class="stripe-link-form">
+            <label>Collector monthly<input name="collector:monthly" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <label>Collector yearly<input name="collector:yearly" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <label>Pro monthly<input name="pro:monthly" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <label>Pro yearly<input name="pro:yearly" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <label>Dealer monthly<input name="dealer:monthly" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <label>Dealer yearly<input name="dealer:yearly" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <label>10 grading credits<input name="grade10:once" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <label>50 grading credits<input name="grade50:once" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <label>200 grading credits<input name="grade200:once" type="url" placeholder="https://buy.stripe.com/..." /></label>
+            <button class="primary-button" type="submit">Save test payment links</button>
+          </form>
+          <p id="stripeLinkStatus" class="stripe-link-status">Only paste public Payment Links here. Never paste secret API keys.</p>
+        </section>
+
+        <section class="billing-roadmap">
+          <article>
+            <strong>1</strong>
+            <h2>Payment Links now</h2>
+            <p>Fastest path for first revenue: Stripe-hosted checkout for each monthly and yearly plan.</p>
+          </article>
+          <article>
+            <strong>2</strong>
+            <h2>Webhook next</h2>
+            <p>A backend webhook should confirm payments and write the real plan to Supabase entitlements.</p>
+          </article>
+          <article>
+            <strong>3</strong>
+            <h2>App stores later</h2>
+            <p>The PWA stays first, then Android, then iOS when the store fees and in-app purchase rules are ready.</p>
+          </article>
+        </section>
+      </main>
+    </div>
+    <script src="./data.js"></script>
+    <script src="./billing.js?v=monetize1"></script>
+    <script type="module" src="./brand3d.js?v=monetize1"></script>
+    <script type="module" src="./page3d.js?v=monetize1"></script>
+    <script src="./app.js?v=monetize1"></script>
+  </body>
+</html>
