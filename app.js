@@ -5,6 +5,8 @@ let activeVaultRender = null;
 let lastScanCard = null;
 let lastScanImageUrl = "";
 let lastScanSearchHint = "";
+let lastScanAnalysis = null;
+let lastScanDataUrl = "";
 const page = document.body.dataset.page;
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
@@ -275,7 +277,24 @@ function initScanner() {
     }
   });
 
-  document.querySelector("#captureButton").addEventListener("click", () => simulateScan(result, status));
+  document.querySelector("#captureButton").addEventListener("click", async () => {
+    if (video.videoWidth && video.videoHeight) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+      if (blob) {
+        const file = new File([blob], `cardcortex-camera-${Date.now()}.jpg`, { type: "image/jpeg" });
+        lastScanDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+        await prepareScanAnalysis(file, status);
+      }
+    } else {
+      lastScanAnalysis = null;
+      lastScanDataUrl = "";
+      updateScanTelemetry();
+    }
+    simulateScan(result, status);
+  });
   document.querySelector("#uploadInput").addEventListener("change", (event) => {
     if (!event.target.files?.length) return;
     const file = event.target.files[0];
@@ -285,6 +304,8 @@ function initScanner() {
       canvas.width = image.width;
       canvas.height = image.height;
       canvas.getContext("2d").drawImage(image, 0, 0);
+      lastScanDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      await prepareScanAnalysis(file, status);
       const api = window.CardCortexSupabase;
       lastScanImageUrl = "";
       if (api && (await api.getUser())) {
@@ -315,6 +336,16 @@ function initScanner() {
       return;
     }
 
+    const gradeButton = event.target.closest("#sendToGradeButton");
+    if (gradeButton) {
+      if (lastScanDataUrl) {
+        localStorage.setItem("cardcortex-grade-front", lastScanDataUrl);
+        localStorage.setItem("cardcortex-grade-source-name", document.querySelector("#scanName")?.value || lastScanCard?.name || "scanned card");
+      }
+      window.location.href = "./grading.html?from=scanner";
+      return;
+    }
+
     if (!event.target.matches("#saveScanButton")) return;
     const api = window.CardCortexSupabase;
     if (!api || !(await api.getUser())) {
@@ -338,19 +369,21 @@ function initScanner() {
   });
 }
 
-async function simulateScan(result, status) {
-  const card = cards[Math.floor(Math.random() * cards.length)];
+async function simulateScan(result, status, forceRandom = false) {
+  const card = chooseScanCandidate(forceRandom);
   lastScanCard = { ...card };
-  status.textContent = `AI made a best guess: ${card.name}. Review and correct it before saving.`;
+  const confidenceBoost = lastScanAnalysis ? Math.round(lastScanAnalysis.confidence) : card.confidence;
+  status.textContent = `Scanner matched a best candidate: ${card.name}. Review and correct it before saving.`;
   result.innerHTML = `
     <article class="scan-review">
       <div class="scan-review-card" style="--card-accent:${card.color}">
         <div class="mini-card holo-card"><span>${card.category}</span><strong>${card.name.slice(0, 2).toUpperCase()}</strong></div>
         <div>
-          <h2>Review AI guess</h2>
-          <p>Correct anything that is wrong. CardCortex saves your reviewed version, not the raw guess.</p>
+          <h2>Review scanner match</h2>
+          <p>Correct anything that is wrong. CardCortex saves your reviewed version, not the raw match.</p>
         </div>
       </div>
+      ${scanTelemetryCard()}
       <form id="scanReviewForm" class="scan-review-form">
         <label>Card name<input id="scanName" type="text" value="${escapeAttribute(card.name)}" required /></label>
         <label>Category<input id="scanCategory" type="text" value="${escapeAttribute(card.category)}" required /></label>
@@ -361,10 +394,11 @@ async function simulateScan(result, status) {
         <label>Raw value<input id="scanRawValue" type="number" min="0" step="1" value="${Number(card.rawValue || 0)}" /></label>
         <label>Graded value<input id="scanGradedValue" type="number" min="0" step="1" value="${Number(card.gradedValue || card.rawValue || 0)}" /></label>
         <label>AI grade<input id="scanGrade" type="number" min="0" max="10" step="0.1" value="${Number(card.grade || 0)}" /></label>
-        <label>AI confidence<input id="scanConfidence" type="number" min="0" max="100" step="1" value="${Number(card.confidence || 0)}" /></label>
+        <label>AI confidence<input id="scanConfidence" type="number" min="0" max="100" step="1" value="${Number(confidenceBoost || 0)}" /></label>
       </form>
       <div class="scan-review-actions">
         <button id="saveScanButton" class="primary-button save-scan-button" type="button">Save reviewed card to vault</button>
+        <button id="sendToGradeButton" class="secondary-button" type="button">Send scan to grading</button>
         <button id="newGuessButton" class="secondary-button" type="button">Try another AI guess</button>
       </div>
       <section class="catalog-match-panel">
@@ -382,8 +416,84 @@ async function simulateScan(result, status) {
       </section>
     </article>`;
 
-  document.querySelector("#newGuessButton")?.addEventListener("click", () => simulateScan(result, status));
+  document.querySelector("#newGuessButton")?.addEventListener("click", () => simulateScan(result, status, true));
   await loadScanCatalogMatches(lastScanSearchHint || card.name, status);
+}
+
+async function prepareScanAnalysis(file, status) {
+  try {
+    const analysis = await analyzeCardImage(file);
+    const borderConfidence = scanBorderConfidence(analysis.box, analysis.width, analysis.height);
+    lastScanAnalysis = {
+      ...analysis,
+      borderConfidence,
+      confidence: clamp(analysis.quality * 0.54 + borderConfidence * 0.3 + analysis.centering.score * 0.16, 35, 98),
+    };
+    updateScanTelemetry();
+    if (status) status.textContent = `Image analyzed: ${Math.round(lastScanAnalysis.confidence)}% scan confidence. Review match candidates before saving.`;
+  } catch (error) {
+    lastScanAnalysis = null;
+    updateScanTelemetry();
+    if (status) status.textContent = `Image analysis could not run: ${error.message}`;
+  }
+}
+
+function chooseScanCandidate(forceRandom = false) {
+  if (forceRandom) return cards[Math.floor(Math.random() * cards.length)];
+  const hint = lastScanSearchHint.toLowerCase().trim();
+  if (hint) {
+    const scored = cards.map((card) => {
+      const text = `${card.name} ${card.category} ${card.set} ${card.number}`.toLowerCase();
+      const words = hint.split(/\s+/).filter(Boolean);
+      const score = words.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
+      return { card, score };
+    }).sort((a, b) => b.score - a.score);
+    if (scored[0]?.score) return scored[0].card;
+  }
+  return cards[Math.floor(Math.random() * cards.length)];
+}
+
+function scanBorderConfidence(box, width, height) {
+  const boxWidth = Math.max(1, box.right - box.x);
+  const boxHeight = Math.max(1, box.bottom - box.y);
+  const coverage = (boxWidth * boxHeight) / Math.max(1, width * height);
+  const cardRatio = boxHeight / boxWidth;
+  const ratioScore = 100 - Math.min(55, Math.abs(cardRatio - 1.4) * 42);
+  const coverageScore = clamp(coverage * 115, 35, 100);
+  return clamp(ratioScore * 0.45 + coverageScore * 0.55, 35, 99);
+}
+
+function updateScanTelemetry() {
+  const frame = document.querySelector("#scanFrameScore");
+  const border = document.querySelector("#scanBorderScore");
+  const focus = document.querySelector("#scanFocusScore");
+  if (!frame || !border || !focus) return;
+  if (!lastScanAnalysis) {
+    frame.textContent = "Waiting";
+    border.textContent = "Waiting";
+    focus.textContent = "Waiting";
+    return;
+  }
+  frame.textContent = `${Math.round(lastScanAnalysis.confidence)}%`;
+  border.textContent = `${Math.round(lastScanAnalysis.borderConfidence)}%`;
+  focus.textContent = `${Math.round(lastScanAnalysis.quality)}%`;
+}
+
+function scanTelemetryCard() {
+  if (!lastScanAnalysis) {
+    return `
+      <div class="scan-telemetry">
+        <article><small>Scan confidence</small><strong>Manual review</strong></article>
+        <article><small>Border lock</small><strong>Not measured</strong></article>
+        <article><small>Focus signal</small><strong>Not measured</strong></article>
+      </div>`;
+  }
+  return `
+    <div class="scan-telemetry">
+      <article><small>Scan confidence</small><strong>${Math.round(lastScanAnalysis.confidence)}%</strong></article>
+      <article><small>Border lock</small><strong>${Math.round(lastScanAnalysis.borderConfidence)}%</strong></article>
+      <article><small>Focus signal</small><strong>${Math.round(lastScanAnalysis.quality)}%</strong></article>
+    </div>`;
 }
 
 async function loadScanCatalogMatches(query, status) {
@@ -706,7 +816,19 @@ function initGradePhotoLab() {
   const preview = document.querySelector("#gradePhotoPreview");
   const status = document.querySelector("#gradePhotoStatus");
   const report = document.querySelector("#gradeReport");
+  const handoff = document.querySelector("#gradeHandoffNotice");
   const uploaded = new Map();
+  const scannerFront = localStorage.getItem("cardcortex-grade-front");
+  const scannerName = localStorage.getItem("cardcortex-grade-source-name") || "scanned card";
+  if (scannerFront && handoff) {
+    const file = dataUrlToFile(scannerFront, `cardcortex-${scannerName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-front.jpg`);
+    uploaded.set("front", { file, url: scannerFront });
+    handoff.hidden = false;
+    handoff.innerHTML = `<strong>Scanner handoff loaded.</strong> Front image from ${escapeHtml(scannerName)} is ready. Add the back photo to run the full two-sided grade.`;
+    preview.innerHTML = `<figure><img src="${scannerFront}" alt="front card view from scanner" /><figcaption>front from scanner</figcaption></figure>`;
+    updateGradeMethods({ front: true, back: false });
+    status.textContent = "Front scan loaded from scanner. Add the back photo to unlock automatic grading.";
+  }
   inputs.forEach((input) => {
     input.addEventListener("change", () => {
       const file = input.files?.[0];
@@ -735,6 +857,15 @@ function initGradePhotoLab() {
       status.textContent = `Automatic grading failed: ${error.message}`;
     }
   });
+}
+
+function dataUrlToFile(dataUrl, filename) {
+  const [meta, content] = dataUrl.split(",");
+  const mime = /data:(.*?);base64/.exec(meta)?.[1] || "image/jpeg";
+  const binary = atob(content || "");
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return new File([bytes], filename, { type: mime });
 }
 
 function resetGradeResult() {

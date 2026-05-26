@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v3-animated-brand";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v4-scan-workflow";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

@@ -583,6 +583,39 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 .ai-panel { padding: 16px; border-radius: 8px; color: #fff; background: var(--ink); }
 .scan-card { margin-top: 14px; }
 
+.scan-intelligence {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.scan-intelligence article {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(118,247,255,0.18);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(118,247,255,0.1), transparent 14rem),
+    rgba(10,17,40,0.72);
+}
+
+.scan-intelligence small,
+.scan-intelligence strong {
+  display: block;
+}
+
+.scan-intelligence small {
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.scan-intelligence strong {
+  margin-top: 5px;
+  color: var(--cyan);
+  font-size: 1.18rem;
+}
+
 .scan-review {
   display: grid;
   gap: 14px;
@@ -628,6 +661,34 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.scan-telemetry {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.scan-telemetry article {
+  padding: 10px;
+  border: 1px solid rgba(118,247,255,0.16);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+}
+
+.scan-telemetry small,
+.scan-telemetry strong {
+  display: block;
+}
+
+.scan-telemetry small {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 850;
+}
+
+.scan-telemetry strong {
+  margin-top: 4px;
 }
 
 .catalog-match-panel {
@@ -855,6 +916,18 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   color: var(--muted);
   font-size: .82rem;
   font-weight: 850;
+}
+
+.grade-handoff-notice {
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(245,179,53,0.3);
+  border-radius: 8px;
+  color: #f7fbff;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(245,179,53,0.16), transparent 14rem),
+    rgba(10,17,40,0.72);
+  line-height: 1.5;
 }
 
 .grade-report {
@@ -1154,6 +1227,7 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   .quick-add-form { grid-template-columns: 1fr; }
   .scan-review-form { grid-template-columns: 1fr; }
   .catalog-match-search, .catalog-match-card { grid-template-columns: 1fr; }
+  .scan-intelligence, .scan-telemetry { grid-template-columns: 1fr; }
   .catalog-match-card img { width: 100%; max-width: 150px; }
   .photo-slots { grid-template-columns: 1fr; }
   .method-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
