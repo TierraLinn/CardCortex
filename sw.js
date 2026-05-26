@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v6-motion-field";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v8-cert-library";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

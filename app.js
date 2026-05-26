@@ -8,8 +8,31 @@ let lastScanImageUrl = "";
 let lastScanSearchHint = "";
 let lastScanAnalysis = null;
 let lastScanDataUrl = "";
+let activeGradeResult = null;
 const page = document.body.dataset.page;
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const CERTIFICATE_STORE_KEY = "cardcortex-certificates";
+const storage = createStorage();
+window.CardCortexStorage = storage;
+
+function createStorage() {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const testKey = "cardcortex-storage-test";
+      window.localStorage.setItem(testKey, "1");
+      window.localStorage.removeItem(testKey);
+      return window.localStorage;
+    }
+  } catch {
+    // Some embedded browsers disable storage. Keep the app usable with in-memory storage.
+  }
+  const memory = new Map();
+  return {
+    getItem: (key) => (memory.has(key) ? memory.get(key) : null),
+    setItem: (key, value) => memory.set(key, String(value)),
+    removeItem: (key) => memory.delete(key),
+  };
+}
 
 document.querySelectorAll("nav a").forEach((link) => {
   if (link.getAttribute("href")?.includes(`${page}.html`) || (page === "home" && link.getAttribute("href") === "./index.html")) {
@@ -44,6 +67,19 @@ function renderVault() {
   const binderButton = document.querySelector("#binderViewButton");
   const commandStatus = document.querySelector("#vaultCommandStatus");
   let binderMode = false;
+  const vaultDraft = storage.getItem("cardcortex-vault-draft");
+  if (vaultDraft) {
+    try {
+      const draft = JSON.parse(vaultDraft);
+      document.querySelector("#quickName").value = draft.name || "";
+      document.querySelector("#quickCategory").value = draft.category || "";
+      document.querySelector("#quickValue").value = draft.rawValue || "";
+      if (commandStatus) commandStatus.textContent = `${draft.certNumber || "Certificate"} loaded as a vault draft. Add a value and save when you are signed in.`;
+      storage.removeItem("cardcortex-vault-draft");
+    } catch {
+      storage.removeItem("cardcortex-vault-draft");
+    }
+  }
   const rerender = () => {
     const categories = ["All categories", ...new Set(cards.map((card) => card.category))];
     const currentFilter = filter.value || "All categories";
@@ -403,14 +439,14 @@ function bestSellRoute(card) {
 function sendVaultCardToGrading(id) {
   const card = cards.find((item) => item.id === id);
   if (!card) return;
-  localStorage.setItem("cardcortex-grade-source-name", card.name);
+  storage.setItem("cardcortex-grade-source-name", card.name);
   window.location.href = "./grading.html?from=vault";
 }
 
 function sendVaultCardToMarketplace(id) {
   const card = cards.find((item) => item.id === id);
   if (!card) return;
-  localStorage.setItem("cardcortex-listing-card", JSON.stringify({
+  storage.setItem("cardcortex-listing-card", JSON.stringify({
     name: card.name,
     price: card.rawValue,
     condition: `AI grade ${card.grade || "pending"} with ${card.confidence || 0}% confidence. ${card.set} ${card.number}.`,
@@ -496,8 +532,8 @@ function initScanner() {
     const gradeButton = event.target.closest("#sendToGradeButton");
     if (gradeButton) {
       if (lastScanDataUrl) {
-        localStorage.setItem("cardcortex-grade-front", lastScanDataUrl);
-        localStorage.setItem("cardcortex-grade-source-name", document.querySelector("#scanName")?.value || lastScanCard?.name || "scanned card");
+        storage.setItem("cardcortex-grade-front", lastScanDataUrl);
+        storage.setItem("cardcortex-grade-source-name", document.querySelector("#scanName")?.value || lastScanCard?.name || "scanned card");
       }
       window.location.href = "./grading.html?from=scanner";
       return;
@@ -941,6 +977,7 @@ function catalogResultCard({ row, prices }) {
 }
 
 function renderGrading() {
+  activeGradeResult = null;
   document.querySelector("#certNumber").textContent = "Pending scan";
   document.querySelector("#gradeScore").textContent = "--";
   document.querySelector("#gradeConfidence").textContent = "No grade generated yet";
@@ -958,6 +995,7 @@ function renderGrading() {
   renderGradeMetrics(metrics);
   updateGradeMethods();
   initGradePhotoLab();
+  initCertificateLibrary();
 }
 
 function renderGradeMetrics(metrics) {
@@ -975,11 +1013,11 @@ function initGradePhotoLab() {
   const report = document.querySelector("#gradeReport");
   const handoff = document.querySelector("#gradeHandoffNotice");
   const uploaded = new Map();
-  const scannerFront = localStorage.getItem("cardcortex-grade-front");
-  const scannerName = localStorage.getItem("cardcortex-grade-source-name") || "scanned card";
+  const scannerFront = storage.getItem("cardcortex-grade-front");
+  const scannerName = storage.getItem("cardcortex-grade-source-name") || "scanned card";
   if (scannerFront && handoff) {
     const file = dataUrlToFile(scannerFront, `cardcortex-${scannerName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-front.jpg`);
-    uploaded.set("front", { file, url: scannerFront });
+    uploaded.set("front", { file, url: scannerFront, dataUrl: scannerFront });
     handoff.hidden = false;
     handoff.innerHTML = `<strong>Scanner handoff loaded.</strong> Front image from ${escapeHtml(scannerName)} is ready. Add the back photo to run the full two-sided grade.`;
     preview.innerHTML = `<figure><img src="${scannerFront}" alt="front card view from scanner" /><figcaption>front from scanner</figcaption></figure>`;
@@ -987,10 +1025,11 @@ function initGradePhotoLab() {
     status.textContent = "Front scan loaded from scanner. Add the back photo to unlock automatic grading.";
   }
   inputs.forEach((input) => {
-    input.addEventListener("change", () => {
+    input.addEventListener("change", async () => {
       const file = input.files?.[0];
       if (!file) return;
-      uploaded.set(input.dataset.gradePhoto, { file, url: URL.createObjectURL(file) });
+      const dataUrl = await imageFileToDisplayDataUrl(file);
+      uploaded.set(input.dataset.gradePhoto, { file, url: dataUrl, dataUrl });
       preview.innerHTML = [...uploaded.entries()].map(([label, item]) => `<figure><img src="${item.url}" alt="${label} card view" /><figcaption>${label}</figcaption></figure>`).join("");
       resetGradeResult();
       updateGradeMethods({ front: uploaded.has("front"), back: uploaded.has("back") });
@@ -1007,8 +1046,9 @@ function initGradePhotoLab() {
       const front = await analyzeCardImage(uploaded.get("front").file);
       const back = await analyzeCardImage(uploaded.get("back").file);
       const result = buildGradeReport(front, back);
-      result.frontUrl = uploaded.get("front").url;
-      result.backUrl = uploaded.get("back").url;
+      result.sourceName = storage.getItem("cardcortex-grade-source-name") || "";
+      result.frontUrl = uploaded.get("front").dataUrl || uploaded.get("front").url;
+      result.backUrl = uploaded.get("back").dataUrl || uploaded.get("back").url;
       renderAutomaticGrade(result, report, status);
     } catch (error) {
       status.textContent = `Automatic grading failed: ${error.message}`;
@@ -1025,7 +1065,23 @@ function dataUrlToFile(dataUrl, filename) {
   return new File([bytes], filename, { type: mime });
 }
 
+async function imageFileToDisplayDataUrl(file, maxWidth = 760) {
+  const image = await loadImageFromFile(file);
+  const scale = Math.min(1, maxWidth / image.width);
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.fillStyle = "#071228";
+  context.fillRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", 0.76);
+}
+
 function resetGradeResult() {
+  activeGradeResult = null;
   document.querySelector("#certNumber").textContent = "Pending scan";
   document.querySelector("#gradeName").textContent = "Ready for image analysis";
   document.querySelector("#gradeScore").textContent = "--";
@@ -1038,6 +1094,7 @@ function resetGradeResult() {
 }
 
 function renderAutomaticGrade(result, report, status) {
+  activeGradeResult = certificateFromGradeResult(result);
   document.querySelector("#gradeScore").textContent = result.grade.toFixed(1);
   document.querySelector("#gradeConfidence").textContent = `AI confidence ${Math.round(result.confidence)}%`;
   document.querySelector("#certNumber").textContent = result.certNumber;
@@ -1077,8 +1134,171 @@ function renderAutomaticGrade(result, report, status) {
     <div class="grade-flags">
       ${result.flags.map((flag) => `<span>${escapeHtml(flag)}</span>`).join("")}
     </div>
+    <div class="grade-report-actions">
+      <button class="primary-button" type="button" data-cert-action="save">Save certificate</button>
+      <button class="secondary-button" type="button" data-cert-action="export">Export report</button>
+      <button class="secondary-button" type="button" data-cert-action="vault">Add to vault</button>
+      <button class="secondary-button" type="button" data-cert-action="sell">Prepare listing</button>
+    </div>
   `;
-  status.textContent = `Automatic grade complete: ${result.grade.toFixed(1)} with ${Math.round(result.confidence)}% confidence.`;
+  if (status) status.textContent = `Automatic grade complete: ${result.grade.toFixed(1)} with ${Math.round(result.confidence)}% confidence.`;
+}
+
+function initCertificateLibrary() {
+  renderCertificateLibrary();
+  document.querySelector("#gradeReport")?.addEventListener("click", (event) => {
+    const action = event.target.closest("[data-cert-action]")?.dataset.certAction;
+    if (!action || !activeGradeResult) return;
+    if (action === "save") saveActiveCertificate();
+    if (action === "export") exportCertificate(activeGradeResult);
+    if (action === "vault") sendCertificateToVault(activeGradeResult);
+    if (action === "sell") sendCertificateToMarketplace(activeGradeResult);
+  });
+  document.querySelector("#certificateLibrary")?.addEventListener("click", (event) => {
+    const certNumber = event.target.closest("[data-cert-id]")?.dataset.certId;
+    const action = event.target.closest("[data-cert-library-action]")?.dataset.certLibraryAction;
+    if (!certNumber || !action) return;
+    const cert = getCertificates().find((item) => item.certNumber === certNumber);
+    if (!cert) return;
+    if (action === "view") {
+      const report = document.querySelector("#gradeReport");
+      const status = document.querySelector("#gradePhotoStatus");
+      renderAutomaticGrade(cert, report, status);
+      report.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    if (action === "export") exportCertificate(cert);
+    if (action === "sell") sendCertificateToMarketplace(cert);
+    if (action === "delete") {
+      persistCertificates(getCertificates().filter((item) => item.certNumber !== certNumber));
+      renderCertificateLibrary();
+    }
+  });
+  document.querySelector("#exportCertificatesButton")?.addEventListener("click", () => {
+    exportJson(getCertificates(), `cardcortex-certificates-${new Date().toISOString().slice(0, 10)}.json`);
+  });
+  document.querySelector("#clearCertificatesButton")?.addEventListener("click", () => {
+    if (!getCertificates().length) return;
+    if (!window.confirm("Clear all saved CardCortex certificates from this browser?")) return;
+    persistCertificates([]);
+    renderCertificateLibrary();
+  });
+}
+
+function certificateFromGradeResult(result) {
+  return {
+    id: result.certNumber,
+    certNumber: result.certNumber,
+    sourceName: result.sourceName || storage.getItem("cardcortex-grade-source-name") || "Uploaded card",
+    grade: Number(result.grade || 0),
+    score1000: Number(result.score1000 || 0),
+    confidence: Number(result.confidence || 0),
+    createdAt: result.createdAt || new Date().toISOString(),
+    frontUrl: result.frontUrl || "",
+    backUrl: result.backUrl || "",
+    metrics: result.metrics || [],
+    metricsByKey: result.metricsByKey || {},
+    notes: result.notes || [],
+    flags: result.flags || [],
+    summary: result.summary || "",
+    qrCells: result.qrCells || pseudoQrCells(result.certNumber || String(Date.now())),
+  };
+}
+
+function getCertificates() {
+  try {
+    const parsed = JSON.parse(storage.getItem(CERTIFICATE_STORE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistCertificates(certificates) {
+  storage.setItem(CERTIFICATE_STORE_KEY, JSON.stringify(certificates.slice(0, 24)));
+}
+
+function saveActiveCertificate() {
+  const certificates = getCertificates().filter((item) => item.certNumber !== activeGradeResult.certNumber);
+  persistCertificates([activeGradeResult, ...certificates]);
+  renderCertificateLibrary();
+  const status = document.querySelector("#gradePhotoStatus");
+  if (status) status.textContent = `${activeGradeResult.certNumber} saved to the CardCortex certification library.`;
+}
+
+function renderCertificateLibrary() {
+  const target = document.querySelector("#certificateLibrary");
+  if (!target) return;
+  const certificates = getCertificates();
+  if (!certificates.length) {
+    target.innerHTML = `
+      <article class="certificate-empty">
+        <strong>No certificates saved yet.</strong>
+        <p>Run a front/back automatic grade, then save the certificate here for export, vault entry, or listing prep.</p>
+      </article>
+    `;
+    return;
+  }
+  target.innerHTML = certificates.map(certificateCard).join("");
+}
+
+function certificateCard(cert) {
+  return `
+    <article class="certificate-card" data-cert-id="${escapeAttribute(cert.certNumber)}">
+      <div class="certificate-card-media">
+        <img src="${cert.frontUrl || ""}" alt="Saved certificate front scan" />
+        <img src="${cert.backUrl || ""}" alt="Saved certificate back scan" />
+      </div>
+      <div>
+        <small>${escapeHtml(cert.certNumber)}</small>
+        <h3>${escapeHtml(cert.sourceName || "CardCortex certificate")}</h3>
+        <div class="chip-row">
+          <span>AI grade ${Number(cert.grade || 0).toFixed(1)}</span>
+          <span>${Math.round(cert.confidence || 0)}% confidence</span>
+          <span>${Math.round(cert.score1000 || 0)}/1000</span>
+        </div>
+      </div>
+      <div class="certificate-card-actions">
+        <button class="secondary-button tiny-button" type="button" data-cert-library-action="view">View</button>
+        <button class="secondary-button tiny-button" type="button" data-cert-library-action="export">Export</button>
+        <button class="secondary-button tiny-button" type="button" data-cert-library-action="sell">Sell</button>
+        <button class="danger-button tiny-button" type="button" data-cert-library-action="delete">Delete</button>
+      </div>
+    </article>
+  `;
+}
+
+function exportCertificate(cert) {
+  exportJson(cert, `${cert.certNumber || "cardcortex-certificate"}.json`);
+}
+
+function exportJson(payload, filename) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function sendCertificateToMarketplace(cert) {
+  storage.setItem("cardcortex-listing-card", JSON.stringify({
+    name: cert.sourceName || "AI graded trading card",
+    condition: `CardCortex AI certificate ${cert.certNumber}: estimated grade ${Number(cert.grade || 0).toFixed(1)}, score ${Math.round(cert.score1000 || 0)}/1000, confidence ${Math.round(cert.confidence || 0)}%. ${cert.flags?.join("; ") || ""}`,
+    price: "",
+  }));
+  window.location.href = "./marketplace.html?from=certificate";
+}
+
+function sendCertificateToVault(cert) {
+  storage.setItem("cardcortex-vault-draft", JSON.stringify({
+    name: cert.sourceName || "AI graded card",
+    category: "AI graded",
+    rawValue: "",
+    grade: Number(cert.grade || 0).toFixed(1),
+    certNumber: cert.certNumber,
+  }));
+  window.location.href = "./vault.html?from=certificate";
 }
 
 function updateGradeMethods(scores = {}) {
@@ -1415,7 +1635,7 @@ function renderMarketplace() {
 function initListingStudio() {
   const form = document.querySelector("#listingForm");
   if (!form) return;
-  const handoff = localStorage.getItem("cardcortex-listing-card");
+  const handoff = storage.getItem("cardcortex-listing-card");
   if (handoff) {
     try {
       const card = JSON.parse(handoff);
