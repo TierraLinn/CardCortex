@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v13-monetize";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v20-stripe-addons";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

@@ -20,6 +20,18 @@ Create these products and prices:
 
 Create one public Payment Link for each product/price above.
 
+Current test link wired:
+
+- Collector monthly: `https://buy.stripe.com/test_7sY9AS0uG2Haa2W3jp9oc00`
+- Collector yearly: `https://buy.stripe.com/test_7sYfZg6T4epSgrkaLR9oc01`
+- Pro monthly: `https://buy.stripe.com/test_aFa4gy5P0dlOcb49HN9oc02`
+- Pro yearly: `https://buy.stripe.com/test_bJe00idhs81ugrk9HN9oc03`
+- Dealer monthly: `https://buy.stripe.com/test_eVq7sK0uG81ufng5rx9oc05`
+- Dealer yearly: `https://buy.stripe.com/test_9B64gy3GS5Tma2Wg6b9oc06`
+- 10 AI grading credits: `https://buy.stripe.com/test_5kQ28q0uGdlOcb41bh9oc07`
+- 50 AI grading credits: `https://buy.stripe.com/test_aFadR8fpA0z26QKf279oc08`
+- 200 AI grading credits: `https://buy.stripe.com/test_3cIbJ00uG81u8YS6vB9oc09`
+
 Safe to share with Codex:
 
 - Payment Link URLs that start with `https://buy.stripe.com/`

@@ -6,12 +6,21 @@
   const CURRENT_MONTH = new Date().toISOString().slice(0, 7);
 
   const CHECKOUT_LINKS = {
-    collector: { monthly: "", yearly: "" },
-    pro: { monthly: "", yearly: "" },
-    dealer: { monthly: "", yearly: "" },
-    grade10: { once: "" },
-    grade50: { once: "" },
-    grade200: { once: "" },
+    collector: {
+      monthly: "https://buy.stripe.com/test_7sY9AS0uG2Haa2W3jp9oc00",
+      yearly: "https://buy.stripe.com/test_7sYfZg6T4epSgrkaLR9oc01",
+    },
+    pro: {
+      monthly: "https://buy.stripe.com/test_aFa4gy5P0dlOcb49HN9oc02",
+      yearly: "https://buy.stripe.com/test_bJe00idhs81ugrk9HN9oc03",
+    },
+    dealer: {
+      monthly: "https://buy.stripe.com/test_eVq7sK0uG81ufng5rx9oc05",
+      yearly: "https://buy.stripe.com/test_9B64gy3GS5Tma2Wg6b9oc06",
+    },
+    grade10: { once: "https://buy.stripe.com/test_5kQ28q0uGdlOcb41bh9oc07" },
+    grade50: { once: "https://buy.stripe.com/test_aFadR8fpA0z26QKf279oc08" },
+    grade200: { once: "https://buy.stripe.com/test_3cIbJ00uG81u8YS6vB9oc09" },
   };
 
   const plans = [
