@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v1";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v2-real-grading";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

@@ -674,8 +674,10 @@ function catalogResultCard({ row, prices }) {
 }
 
 function renderGrading() {
-  const card = cards[0];
-  document.querySelector("#certNumber").textContent = `CC-${new Date().getFullYear()}-${card.id.toUpperCase().slice(0, 8)}`;
+  document.querySelector("#certNumber").textContent = "Pending scan";
+  document.querySelector("#gradeScore").textContent = "--";
+  document.querySelector("#gradeConfidence").textContent = "No grade generated yet";
+  document.querySelector("#gradeName").textContent = "Upload front and back";
   const metrics = [
     ["Centering", 0],
     ["Corners", 0],
@@ -687,13 +689,14 @@ function renderGrading() {
     ["AI confidence", 0],
   ];
   renderGradeMetrics(metrics);
+  updateGradeMethods();
   initGradePhotoLab();
 }
 
 function renderGradeMetrics(metrics) {
   document.querySelector("#gradeBreakdown").innerHTML = metrics.map(([label, score]) => `
     <article>
-      <div><strong>${label}</strong><span>${Math.round(score)}%</span></div>
+      <div><strong>${label}</strong><span>${score ? `${Math.round(score)}%` : "Waiting"}</span></div>
       <b><i style="width:${Math.max(0, Math.min(100, score))}%"></i></b>
     </article>`).join("");
 }
@@ -710,6 +713,8 @@ function initGradePhotoLab() {
       if (!file) return;
       uploaded.set(input.dataset.gradePhoto, { file, url: URL.createObjectURL(file) });
       preview.innerHTML = [...uploaded.entries()].map(([label, item]) => `<figure><img src="${item.url}" alt="${label} card view" /><figcaption>${label}</figcaption></figure>`).join("");
+      resetGradeResult();
+      updateGradeMethods({ front: uploaded.has("front"), back: uploaded.has("back") });
       status.textContent = uploaded.size === 2 ? "Front and back are ready. Run automatic grade." : "Add the back photo to unlock automatic grading.";
     });
   });
@@ -723,6 +728,8 @@ function initGradePhotoLab() {
       const front = await analyzeCardImage(uploaded.get("front").file);
       const back = await analyzeCardImage(uploaded.get("back").file);
       const result = buildGradeReport(front, back);
+      result.frontUrl = uploaded.get("front").url;
+      result.backUrl = uploaded.get("back").url;
       renderAutomaticGrade(result, report, status);
     } catch (error) {
       status.textContent = `Automatic grading failed: ${error.message}`;
@@ -730,13 +737,48 @@ function initGradePhotoLab() {
   });
 }
 
+function resetGradeResult() {
+  document.querySelector("#certNumber").textContent = "Pending scan";
+  document.querySelector("#gradeName").textContent = "Ready for image analysis";
+  document.querySelector("#gradeScore").textContent = "--";
+  document.querySelector("#gradeConfidence").textContent = "No grade generated yet";
+  const report = document.querySelector("#gradeReport");
+  if (report) {
+    report.hidden = true;
+    report.innerHTML = "";
+  }
+}
+
 function renderAutomaticGrade(result, report, status) {
   document.querySelector("#gradeScore").textContent = result.grade.toFixed(1);
   document.querySelector("#gradeConfidence").textContent = `AI confidence ${Math.round(result.confidence)}%`;
   document.querySelector("#certNumber").textContent = result.certNumber;
+  document.querySelector("#gradeName").textContent = `CardCortex certified estimate ${result.grade.toFixed(1)}`;
   renderGradeMetrics(result.metrics);
+  updateGradeMethods({
+    centering: result.metricsByKey.centering,
+    corners: result.metricsByKey.corners,
+    edges: result.metricsByKey.edges,
+    surface: result.metricsByKey.surface,
+    print: result.metricsByKey.print,
+    whitening: result.metricsByKey.whitening,
+    confidence: result.confidence,
+    certificate: result.score1000,
+  });
   report.hidden = false;
   report.innerHTML = `
+    <div class="cert-slab">
+      <div class="slab-media">
+        <img src="${result.frontUrl || ""}" alt="Front card scan used for grading" />
+        <img src="${result.backUrl || ""}" alt="Back card scan used for grading" />
+      </div>
+      <div class="slab-label">
+        <span>CardCortex AI Certified</span>
+        <strong>${result.grade.toFixed(1)}</strong>
+        <p>${escapeHtml(result.certNumber)}</p>
+        <div class="slab-code" aria-hidden="true">${result.qrCells.map((on) => `<i class="${on ? "on" : ""}"></i>`).join("")}</div>
+      </div>
+    </div>
     <div>
       <h2>Automatic grading report</h2>
       <p>${escapeHtml(result.summary)}</p>
@@ -749,6 +791,23 @@ function renderAutomaticGrade(result, report, status) {
     </div>
   `;
   status.textContent = `Automatic grade complete: ${result.grade.toFixed(1)} with ${Math.round(result.confidence)}% confidence.`;
+}
+
+function updateGradeMethods(scores = {}) {
+  const labels = {
+    centering: scores.centering ? `${Math.round(scores.centering)}%` : scores.front || scores.back ? "Queued" : "Waiting",
+    corners: scores.corners ? `${Math.round(scores.corners)}%` : scores.front || scores.back ? "Queued" : "Waiting",
+    edges: scores.edges ? `${Math.round(scores.edges)}%` : scores.front || scores.back ? "Queued" : "Waiting",
+    surface: scores.surface ? `${Math.round(scores.surface)}%` : scores.front || scores.back ? "Queued" : "Waiting",
+    print: scores.print ? `${Math.round(scores.print)}%` : scores.front || scores.back ? "Queued" : "Waiting",
+    whitening: scores.whitening ? `${Math.round(scores.whitening)}%` : scores.front || scores.back ? "Queued" : "Waiting",
+    confidence: scores.confidence ? `${Math.round(scores.confidence)}%` : scores.front && scores.back ? "Ready" : "Waiting",
+    certificate: scores.certificate ? `${Math.round(scores.certificate)}/1000` : scores.front && scores.back ? "Ready" : "Waiting",
+  };
+  Object.entries(labels).forEach(([key, value]) => {
+    const target = document.querySelector(`[data-grade-method="${key}"] span`);
+    if (target) target.textContent = value;
+  });
 }
 
 async function analyzeCardImage(file) {
@@ -793,7 +852,9 @@ async function analyzeCardImage(file) {
   const surface = scoreSurface(luminance, edge.map, width, height, box);
   const print = clamp(72 + contrast * 0.38 + (totalSat / count) * 24 - Math.abs(brightness - 132) * 0.1, 45, 99);
   const whitening = scoreWhitening(luminance, width, height, box);
-  return { width, height, brightness, contrast, edgeAverage: edge.average, box, quality, centering, corners, edges, surface, print, whitening };
+  const fingerprint = imageFingerprint(luminance, width, height);
+  const defects = detectDefects(luminance, edge.map, width, height, box);
+  return { width, height, brightness, contrast, edgeAverage: edge.average, box, quality, centering, corners, edges, surface, print, whitening, fingerprint, defects };
 }
 
 function loadImageFromFile(file) {
@@ -942,9 +1003,13 @@ function buildGradeReport(front, back) {
   const print = front.print;
   const whitening = back.whitening;
   const photoQuality = average([front.quality, back.quality]);
-  const weighted = centeringScore * 0.18 + corners * 0.18 + edges * 0.18 + surface * 0.18 + print * 0.12 + whitening * 0.1 + photoQuality * 0.06;
-  const grade = clamp(Math.round((weighted / 10) * 10) / 10, 1, 10);
+  const defectPenalty = Math.min(14, (front.defects.hotspots + back.defects.hotspots) * 0.9 + (front.defects.scratchSignals + back.defects.scratchSignals) * 0.18);
+  const weighted = centeringScore * 0.17 + corners * 0.19 + edges * 0.19 + surface * 0.18 + print * 0.11 + whitening * 0.1 + photoQuality * 0.06 - defectPenalty;
+  const score1000 = clamp(Math.round(weighted * 10), 100, 990);
+  const grade = clamp(Math.round((score1000 / 100) * 10) / 10, 1, 10);
   const confidence = clamp(photoQuality * 0.68 + Math.min(front.width, back.width) * 0.04 + 18, 40, 97);
+  const certSeed = `${front.fingerprint}${back.fingerprint}${score1000}`;
+  const certNumber = `CC-AI-${new Date().getFullYear()}-${hashString(certSeed).toString(36).toUpperCase().padStart(6, "0").slice(0, 8)}`;
   const metrics = [
     ["Centering", centeringScore],
     ["Corners", corners],
@@ -960,14 +1025,18 @@ function buildGradeReport(front, back) {
     corners < 82 ? "Corner wear detected" : "Corners look clean",
     edges < 82 ? "Edge roughness detected" : "Edges look consistent",
     surface < 82 ? "Surface/glare risk detected" : "Surface looks stable",
+    defectPenalty > 7 ? "Visible defect signals lowered the grade" : "No heavy defect cluster detected",
     photoQuality < 75 ? "Retake with stronger lighting for higher confidence" : "Photo quality acceptable",
   ];
   return {
     grade,
+    score1000,
     confidence,
     metrics,
-    certNumber: `CC-AI-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-    summary: `Estimated digital grade ${grade.toFixed(1)} from front/back computer-vision checks. This is a CardCortex AI estimate, not an official third-party slab grade.`,
+    metricsByKey: { centering: centeringScore, corners, edges, surface, print, whitening, confidence },
+    certNumber,
+    qrCells: pseudoQrCells(certSeed),
+    summary: `Estimated digital grade ${grade.toFixed(1)} (${score1000}/1000) from front/back image processing: border detection, centering ratios, corner sampling, edge whitening, surface-glare/scratch signals, print contrast, and photo confidence. This is a CardCortex AI certificate, not an official third-party slab grade.`,
     flags,
     notes: [
       { label: "Centering", value: `${front.centering.horizontal} H / ${front.centering.vertical} V`, detail: "Measured from detected border balance on the front image." },
@@ -975,9 +1044,47 @@ function buildGradeReport(front, back) {
       { label: "Edges", value: `${Math.round(edges)}%`, detail: "Samples all four border bands for chipping, whitening, and edge noise." },
       { label: "Surface", value: `${Math.round(surface)}%`, detail: "Checks interior glare, scratch-like contrast, and uneven surface signals." },
       { label: "Back whitening", value: `${Math.round(whitening)}%`, detail: "Weights bright edge wear from the back photo." },
+      { label: "Defect scan", value: `${front.defects.hotspots + back.defects.hotspots} clusters`, detail: "Counts bright wear clusters and scratch-like edge signals that lower the score." },
+      { label: "Score scale", value: `${score1000}/1000`, detail: "Converts the weighted inspection score into a collector-style 1000-point precision score." },
       { label: "Photo confidence", value: `${Math.round(confidence)}%`, detail: "Based on focus, contrast, lighting, and image resolution." },
     ],
   };
+}
+
+function imageFingerprint(luminance, width, height) {
+  const cells = 8;
+  const bits = [];
+  const overall = average(Array.from(luminance));
+  for (let cy = 0; cy < cells; cy += 1) {
+    for (let cx = 0; cx < cells; cx += 1) {
+      const region = sampleRegion(luminance, null, width, (cx / cells) * width, (cy / cells) * height, width / cells, height / cells);
+      bits.push(region.lum > overall ? "1" : "0");
+    }
+  }
+  return parseInt(bits.join("").slice(0, 31), 2).toString(36) + parseInt(bits.join("").slice(31), 2).toString(36);
+}
+
+function detectDefects(luminance, edgeMap, width, height, box) {
+  const insetX = Math.round((box.right - box.x) * 0.08);
+  const insetY = Math.round((box.bottom - box.y) * 0.08);
+  const region = sampleRegion(luminance, edgeMap, width, box.x + insetX, box.y + insetY, box.right - box.x - insetX * 2, box.bottom - box.y - insetY * 2);
+  const hotspots = Math.round(region.brightRatio * 80);
+  const scratchSignals = Math.round(region.edge);
+  return { hotspots, scratchSignals };
+}
+
+function hashString(value) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash >>> 0);
+}
+
+function pseudoQrCells(seed) {
+  const hash = hashString(seed);
+  return Array.from({ length: 49 }, (_, index) => ((hash >> (index % 24)) + index * 7) % 3 !== 0);
 }
 
 function average(values) {

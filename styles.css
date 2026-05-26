@@ -656,8 +656,22 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 .source-bars small, .source-bars em { color: var(--muted); font-style: normal; font-size: 0.8rem; }
 
 .grading-lab { display: grid; grid-template-columns: 320px minmax(0,1fr); gap: 18px; }
-.grade-card { min-height: 440px; padding: 22px; }
-.grade-card strong { display: block; margin-top: 170px; font-size: 5rem; }
+.grade-card {
+  position: sticky;
+  top: 110px;
+  min-height: 440px;
+  padding: 22px;
+  overflow: hidden;
+}
+.grade-card::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.grade-card strong { display: block; margin-top: 150px; font-size: 5rem; }
 .grade-breakdown { display: grid; gap: 12px; }
 .grade-breakdown article { padding: 15px; }
 .grade-breakdown div { display: flex; justify-content: space-between; margin-bottom: 10px; }
@@ -726,9 +740,47 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  color: #fff;
-  background: var(--ink);
+  color: #050713;
+  background: linear-gradient(135deg, #76f7ff, #f5b335);
   font-weight: 850;
+}
+
+.grading-methods {
+  padding: 18px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10,17,40,0.72);
+  box-shadow: var(--shadow);
+}
+
+.grading-methods h2 {
+  margin: 0 0 12px;
+}
+
+.method-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.method-grid article {
+  min-height: 82px;
+  padding: 12px;
+  border: 1px solid rgba(118,247,255,0.16);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(118,247,255,0.08), rgba(124,92,255,0.08));
+}
+
+.method-grid strong,
+.method-grid span {
+  display: block;
+}
+
+.method-grid span {
+  margin-top: 8px;
+  color: #76f7ff;
+  font-weight: 950;
 }
 
 .grade-photo-preview {
@@ -771,6 +823,82 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
     radial-gradient(circle at var(--mx, 50%) var(--my, 24%), rgba(47,128,237,0.14), transparent 22rem),
     rgba(10,17,40,0.78);
   box-shadow: var(--shadow);
+}
+
+.cert-slab {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 14px;
+  align-items: stretch;
+  padding: 14px;
+  border: 1px solid rgba(118,247,255,0.22);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.12), transparent 40%),
+    rgba(2,6,18,0.72);
+}
+
+.slab-media {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.slab-media img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+}
+
+.slab-label {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 8px;
+  color: #050713;
+  background: linear-gradient(135deg, #f7fbff, #76f7ff 45%, #f5b335);
+}
+
+.slab-label span {
+  font-weight: 950;
+  text-transform: uppercase;
+  font-size: .75rem;
+  letter-spacing: .08em;
+}
+
+.slab-label strong {
+  font-size: 4rem;
+  line-height: .9;
+}
+
+.slab-label p {
+  color: rgba(5,7,19,0.72);
+  font-weight: 950;
+}
+
+.slab-code {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  width: 98px;
+  padding: 6px;
+  border-radius: 6px;
+  background: rgba(5,7,19,0.12);
+}
+
+.slab-code i {
+  aspect-ratio: 1;
+  border-radius: 1px;
+  background: rgba(5,7,19,0.14);
+}
+
+.slab-code i.on {
+  background: #050713;
 }
 
 .grade-report[hidden] {
@@ -979,6 +1107,8 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   .catalog-match-search, .catalog-match-card { grid-template-columns: 1fr; }
   .catalog-match-card img { width: 100%; max-width: 150px; }
   .photo-slots { grid-template-columns: 1fr; }
+  .method-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cert-slab { grid-template-columns: 1fr; }
   .grade-report-grid { grid-template-columns: 1fr; }
   .insight-grid, .listing-form { grid-template-columns: 1fr; }
   .next-hero .hero-copy { width: min(680px, 100%); }
