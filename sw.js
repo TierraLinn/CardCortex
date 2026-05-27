@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v21-entitlements";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v27-cortex-universe";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

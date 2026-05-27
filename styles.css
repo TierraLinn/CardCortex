@@ -1,20 +1,20 @@
 :root {
   --ink: #f7fbff;
-  --muted: #c2d4ef;
-  --paper: #071228;
-  --surface: rgba(11, 26, 58, 0.62);
+  --muted: #d2e6ff;
+  --paper: #10284a;
+  --surface: rgba(20, 55, 103, 0.7);
   --line: rgba(118, 247, 255, 0.36);
   --blue: #2f80ed;
   --green: #14b8a6;
   --amber: #f5b335;
   --signal: #3fd7ff;
-  --void: #01030a;
+  --void: #06152a;
   --cyan: #76f7ff;
-  --rift: #0b2f4f;
-  --rift-core: #0b1023;
-  --deep: #071228;
-  --panel: rgba(13, 31, 72, 0.68);
-  --shadow: 0 28px 100px rgba(0, 0, 0, 0.32), 0 0 64px rgba(118, 247, 255, 0.08);
+  --rift: #1a5f8d;
+  --rift-core: #153a68;
+  --deep: #10284a;
+  --panel: rgba(22, 62, 115, 0.74);
+  --shadow: 0 28px 100px rgba(4, 13, 30, 0.28), 0 0 84px rgba(118, 247, 255, 0.14);
 }
 
 * { box-sizing: border-box; }
@@ -25,11 +25,11 @@ body {
   color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at var(--mx, 68%) var(--my, 18%), rgba(118, 247, 255, 0.28), transparent 22rem),
-    radial-gradient(ellipse at 15% 2%, rgba(63, 215, 255, 0.34), transparent 34rem),
-    radial-gradient(ellipse at 92% 24%, rgba(245, 179, 53, 0.16), transparent 28rem),
-    radial-gradient(ellipse at 42% 100%, rgba(48, 84, 180, 0.28), transparent 36rem),
-    linear-gradient(145deg, #071228 0%, #0b1023 44%, #0b2f4f 100%);
+    radial-gradient(circle at var(--mx, 68%) var(--my, 18%), rgba(118, 247, 255, 0.42), transparent 24rem),
+    radial-gradient(ellipse at 15% 2%, rgba(91, 141, 255, 0.34), transparent 34rem),
+    radial-gradient(ellipse at 92% 24%, rgba(245, 179, 53, 0.22), transparent 28rem),
+    radial-gradient(ellipse at 42% 100%, rgba(42, 185, 222, 0.34), transparent 36rem),
+    linear-gradient(145deg, #112d52 0%, #173d6c 44%, #1b668e 100%);
   overflow-x: hidden;
 }
 
@@ -40,9 +40,9 @@ body::before {
   z-index: -2;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(118,247,255,0.08) 0 1px, transparent 1px 96px),
-    linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 96px),
-    radial-gradient(circle at 50% 46%, rgba(118,247,255,0.16), transparent 40rem);
+    linear-gradient(90deg, rgba(118,247,255,0.12) 0 1px, transparent 1px 96px),
+    linear-gradient(0deg, rgba(255,255,255,0.07) 0 1px, transparent 1px 96px),
+    radial-gradient(circle at 50% 46%, rgba(118,247,255,0.24), transparent 40rem);
   mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), #000 0 28%, transparent 82%);
 }
 
@@ -69,8 +69,181 @@ body::after {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  opacity: 0.82;
+  opacity: 1;
   mix-blend-mode: screen;
+}
+
+#cortexSynapseCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.92;
+  mix-blend-mode: screen;
+}
+
+.css-motion-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 1200px;
+}
+
+.css-motion-field span {
+  position: absolute;
+  left: calc(4% + (var(--i) * 10.8%));
+  top: calc(7% + (var(--i) * 8.8%));
+  display: grid;
+  width: clamp(94px, 11vw, 178px);
+  aspect-ratio: 0.7;
+  place-items: end start;
+  padding: 13px;
+  border: 1px solid rgba(255,255,255,0.26);
+  border-radius: 10px;
+  color: rgba(247,251,255,0.72);
+  font-size: clamp(.72rem, .95vw, .96rem);
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background:
+    linear-gradient(142deg, rgba(255,255,255,0.28), transparent 24%),
+    radial-gradient(circle at 24% 20%, rgba(255,255,255,0.9), rgba(118,247,255,0.42) 20%, transparent 34%),
+    linear-gradient(155deg, rgba(33,102,161,0.6), rgba(13,31,72,0.36));
+  box-shadow:
+    0 30px 90px rgba(3,10,24,0.28),
+    0 0 54px rgba(118,247,255,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.24);
+  opacity: 0.24;
+  transform: translate3d(0, 0, calc(-160px + (var(--i) * 18px))) rotateX(56deg) rotateY(calc(-20deg + var(--i) * 8deg)) rotateZ(calc(-20deg + var(--i) * 11deg));
+  animation: cortexCardDrift 10s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -1.25s);
+}
+
+.css-motion-field span::before,
+.css-motion-field span::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(118,247,255,0.42);
+  transform: rotateX(68deg);
+  opacity: 0.62;
+}
+
+.css-motion-field span::after {
+  inset: auto 16px 18px;
+  height: 26%;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.2) 0 2px, transparent 2px 9px);
+  transform: none;
+  opacity: 0.46;
+}
+
+.css-motion-field span:nth-child(2n) {
+  opacity: 0.34;
+  animation-duration: 12.5s;
+}
+
+.css-motion-field span:nth-child(3n) {
+  left: calc(18% + (var(--i) * 8%));
+  top: calc(14% + (var(--i) * 7.2%));
+  width: clamp(72px, 9vw, 132px);
+  opacity: 0.2;
+  animation-duration: 14s;
+}
+
+.vault-card-constellation {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 1500px;
+}
+
+.vault-card-constellation article {
+  position: absolute;
+  left: calc(2% + (var(--i) * 9.6%));
+  top: calc(12% + (var(--i) * 7.4%));
+  display: grid;
+  align-content: space-between;
+  width: clamp(112px, 12vw, 192px);
+  min-height: clamp(166px, 18vw, 278px);
+  padding: 13px;
+  border: 1px solid color-mix(in srgb, var(--card-color), white 28%);
+  border-radius: 11px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.02) 34%),
+    radial-gradient(circle at 28% 20%, color-mix(in srgb, var(--card-color), white 36%), transparent 26%),
+    linear-gradient(155deg, color-mix(in srgb, var(--card-color), #10284a 42%), rgba(6,21,42,0.52));
+  box-shadow:
+    0 26px 90px rgba(3,10,24,0.26),
+    0 0 42px color-mix(in srgb, var(--card-color), transparent 34%),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+  opacity: 0.28;
+  transform-style: preserve-3d;
+  transform: translate3d(0, 0, calc(-220px + var(--i) * 24px)) rotateX(64deg) rotateY(calc(-34deg + var(--i) * 10deg)) rotateZ(calc(-24deg + var(--i) * 8deg));
+  animation: vaultCardPrismFloat 13s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -1.4s);
+}
+
+.vault-card-constellation article:nth-child(2n) {
+  left: calc(8% + (var(--i) * 8.4%));
+  top: calc(4% + (var(--i) * 6.6%));
+  opacity: 0.34;
+  animation-duration: 15.5s;
+}
+
+.vault-card-constellation article:nth-child(3n) {
+  top: calc(28% + (var(--i) * 5.2%));
+  opacity: 0.2;
+}
+
+.vault-card-constellation article::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 10px;
+  background:
+    linear-gradient(110deg, transparent 0 24%, rgba(255,255,255,0.44) 32%, transparent 42% 100%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.14) 0 2px, transparent 2px 12px);
+  opacity: 0.5;
+  transform: translateZ(18px);
+}
+
+.vault-card-constellation article small,
+.vault-card-constellation article strong,
+.vault-card-constellation article span {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 0 16px rgba(0,0,0,0.6);
+}
+
+.vault-card-constellation article small {
+  color: rgba(255,255,255,0.74);
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.vault-card-constellation article strong {
+  align-self: end;
+  color: rgba(255,255,255,0.92);
+  font-size: clamp(.88rem, 1.2vw, 1.08rem);
+  line-height: 1.05;
+}
+
+.vault-card-constellation article span {
+  color: var(--cyan);
+  font-size: .84rem;
+  font-weight: 950;
 }
 
 a { color: inherit; }
@@ -90,7 +263,7 @@ button, .upload-button { cursor: pointer; }
   padding: 12px;
   border: 1px solid rgba(118, 247, 255, 0.2);
   border-radius: 8px;
-  background: rgba(7, 18, 40, 0.78);
+  background: rgba(16, 43, 78, 0.74);
   backdrop-filter: blur(20px);
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.34), 0 0 44px rgba(118, 247, 255, 0.08);
 }
@@ -131,15 +304,16 @@ button, .upload-button { cursor: pointer; }
 }
 
 .brand-glyph::after {
-  inset: 7px;
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 50%;
+  inset: 18px 21px;
+  border: 1px solid rgba(255,255,255,.34);
+  border-radius: 8px;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,.18), transparent 38%),
-    radial-gradient(circle, transparent 52%, rgba(118,247,255,.18) 54%, transparent 58%);
-  filter: none;
-  opacity: .54;
-  animation: none;
+    linear-gradient(145deg, rgba(255,255,255,.72), rgba(118,247,255,.42) 16%, rgba(91,141,255,.42) 48%, rgba(245,179,53,.44)),
+    repeating-linear-gradient(120deg, rgba(255,255,255,.32) 0 2px, transparent 2px 10px);
+  filter: drop-shadow(0 0 14px rgba(118,247,255,.52));
+  opacity: .94;
+  transform: rotateX(58deg) rotateZ(-18deg) translateY(1px);
+  animation: brandPrismFallback 4.8s ease-in-out infinite;
 }
 
 .brand-3d-canvas {
@@ -202,16 +376,18 @@ nav a:hover,
 
 .next-hero {
   display: block;
-  min-height: calc(100vh - 116px);
-  padding: clamp(28px, 5vw, 72px);
+  min-height: max(900px, calc(100vh - 116px));
+  padding: clamp(28px, 5vw, 72px) clamp(28px, 5vw, 72px) 190px;
   color: #fff;
   border-radius: 8px;
+  border: 1px solid rgba(118,247,255,0.28);
   background:
-    radial-gradient(circle at 72% 30%, rgba(118, 247, 255, 0.2), transparent 23rem),
-    radial-gradient(circle at 36% 72%, rgba(16, 44, 78, 0.82), transparent 32rem),
-    radial-gradient(circle at 88% 82%, rgba(245, 179, 53, 0.1), transparent 24rem),
-    linear-gradient(135deg, #01030a 0%, #050713 48%, #061a2d 100%);
-  box-shadow: 0 30px 120px rgba(1, 3, 10, 0.5);
+    radial-gradient(circle at 72% 30%, rgba(118, 247, 255, 0.34), transparent 23rem),
+    radial-gradient(circle at 36% 72%, rgba(23, 91, 136, 0.56), transparent 32rem),
+    radial-gradient(circle at 88% 82%, rgba(245, 179, 53, 0.18), transparent 24rem),
+    linear-gradient(135deg, rgba(7, 24, 48, 0.82) 0%, rgba(11, 38, 72, 0.72) 48%, rgba(15, 78, 116, 0.68) 100%);
+  box-shadow: 0 30px 120px rgba(1, 3, 10, 0.36), inset 0 1px 0 rgba(255,255,255,0.1);
+  backdrop-filter: blur(6px);
 }
 
 .next-hero::before {
@@ -221,8 +397,8 @@ nav a:hover,
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(1, 3, 10, 0.96) 0%, rgba(5, 7, 19, 0.86) 28%, rgba(5, 7, 19, 0.42) 58%, rgba(5, 7, 19, 0.08) 100%),
-    linear-gradient(0deg, rgba(1, 3, 10, 0.72) 0%, transparent 32%);
+    linear-gradient(90deg, rgba(7, 20, 42, 0.74) 0%, rgba(10, 31, 61, 0.58) 28%, rgba(8, 39, 72, 0.22) 58%, rgba(5, 30, 58, 0.04) 100%),
+    linear-gradient(0deg, rgba(7, 20, 42, 0.34) 0%, transparent 32%);
 }
 
 #cortexCanvas {
@@ -249,7 +425,7 @@ nav a:hover,
 .next-hero .hero-copy {
   position: relative;
   z-index: 2;
-  width: min(650px, 55vw);
+  width: min(700px, 58vw);
   padding-top: clamp(32px, 8vh, 96px);
 }
 
@@ -369,7 +545,7 @@ nav a:hover,
   line-height: 0.92;
   letter-spacing: 0;
   transform-style: preserve-3d;
-  animation: suspendedTitle 6.2s ease-in-out infinite;
+  animation: suspendedTitle 4.6s ease-in-out infinite;
   text-shadow:
     0 0 18px rgba(118,247,255,0.28),
     0 18px 70px rgba(0, 0, 0, 0.5);
@@ -396,6 +572,10 @@ nav a:hover,
   line-height: 1.65;
 }
 .hero p { max-width: 720px; font-size: 1.08rem; }
+.next-hero .hero-actions {
+  position: relative;
+  z-index: 5;
+}
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
 .hero-stage {
   position: relative;
@@ -647,8 +827,32 @@ nav a:hover,
 .vault-lane h2,
 .market-card h2,
 .lookup-panel h2 {
-  animation: headingHover 5.8s ease-in-out infinite;
-  text-shadow: 0 0 18px rgba(118,247,255,0.16);
+  animation: headingHover 4.7s ease-in-out infinite;
+  text-shadow: 0 0 20px rgba(118,247,255,0.2), 0 12px 42px rgba(3,10,24,0.34);
+}
+
+.app-page h2,
+.app-page h3,
+.home-command-card strong,
+.collection-card h3,
+.value-row h3,
+.plan-card-top h2,
+.stripe-setup-shell h2,
+.billing-roadmap h2,
+.advisor-card h3,
+.report-stat strong,
+.certificate-card h3 {
+  transform-style: preserve-3d;
+  animation: spacewalkTextBounce 5.6s ease-in-out infinite;
+  text-shadow: 0 0 18px rgba(118,247,255,0.18), 0 12px 36px rgba(3,10,24,0.26);
+}
+
+.app-page h3,
+.collection-card h3,
+.advisor-card h3,
+.certificate-card h3 {
+  animation-duration: 6.8s;
+  animation-delay: -1.4s;
 }
 
 .feature-grid article:nth-child(2n),
@@ -674,8 +878,9 @@ nav a:hover,
   border: 1px solid rgba(118, 247, 255, 0.16);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(255,255,255,0.12), rgba(118,247,255,0.03)),
-    rgba(13, 31, 72, 0.64);
+    radial-gradient(circle at var(--mx, 74%) var(--my, 18%), rgba(118,247,255,0.12), transparent 18rem),
+    linear-gradient(135deg, rgba(255,255,255,0.15), rgba(118,247,255,0.05)),
+    rgba(20, 55, 103, 0.68);
   box-shadow: 0 18px 60px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .feature-grid article { padding: 18px; transition: transform 180ms ease; }
@@ -686,8 +891,8 @@ nav a:hover,
 .market-card:hover,
 .vault-lane:hover,
 .value-tile:hover {
-  animation-play-state: paused;
-  transform: translateY(-12px) scale(1.012) !important;
+  animation-duration: 3.6s;
+  transform: translateY(-12px) scale(1.012) rotateX(1.6deg) !important;
   border-color: rgba(118,247,255,0.54);
   box-shadow: 0 26px 86px rgba(0,0,0,0.26), 0 0 40px rgba(118,247,255,0.18), inset 0 1px 0 rgba(255,255,255,0.16);
 }
@@ -718,10 +923,13 @@ nav a:hover,
   margin-bottom: 18px;
   isolation: isolate;
   perspective: 1100px;
+  border: 1px solid rgba(118,247,255,0.34);
+  border-radius: 8px;
   background:
-    radial-gradient(circle at 78% 24%, rgba(118,247,255,0.26), transparent 22rem),
-    radial-gradient(circle at 12% 80%, rgba(245,179,53,0.16), transparent 18rem),
-    linear-gradient(135deg, rgba(16, 39, 88, 0.72), rgba(8, 18, 44, 0.54));
+    radial-gradient(circle at var(--mx, 76%) var(--my, 20%), rgba(118,247,255,0.42), transparent 23rem),
+    radial-gradient(circle at 12% 80%, rgba(245,179,53,0.24), transparent 18rem),
+    linear-gradient(135deg, rgba(24, 73, 132, 0.76), rgba(18, 42, 83, 0.66));
+  box-shadow: 0 34px 110px rgba(3,10,24,0.28), 0 0 68px rgba(118,247,255,0.14), inset 0 1px 0 rgba(255,255,255,0.14);
 }
 
 .page-heading::before {
@@ -757,6 +965,8 @@ nav a:hover,
 }
 .page-heading > div:first-child {
   min-width: 0;
+  transform-style: preserve-3d;
+  animation: headingPodFloat 6.4s ease-in-out infinite;
 }
 .page-heading h1 { font-size: clamp(2.7rem, 6vw, 6.6rem); }
 .page-heading p {
@@ -766,8 +976,8 @@ nav a:hover,
 .page-heading:hover h1,
 .scan-result:hover h1,
 .hero:hover h1 {
-  animation-play-state: paused;
-  transform: translate3d(0, -14px, 30px) rotateX(2deg) !important;
+  animation-duration: 3.1s;
+  filter: saturate(1.2) brightness(1.12);
 }
 
 .page-heading:hover .heading-orbit-field span,
@@ -807,7 +1017,7 @@ nav a:hover,
   left: calc(52% + (var(--i) * 8%));
   top: calc(8% + (var(--i) * 13%));
   display: grid;
-  width: clamp(86px, 10vw, 138px);
+  width: clamp(104px, 12vw, 174px);
   aspect-ratio: 0.68;
   place-items: end start;
   padding: 11px;
@@ -823,9 +1033,9 @@ nav a:hover,
     0 16px 42px rgba(0,0,0,0.28),
     0 0 36px rgba(118,247,255,0.2),
     inset 0 1px 0 rgba(255,255,255,0.2);
-  opacity: 0.54;
+  opacity: 0.74;
   transform: translate3d(0, 0, -90px) rotateX(58deg) rotateZ(calc(-12deg + (var(--i) * 9deg)));
-  animation: headingCardOrbit 8.5s ease-in-out infinite;
+  animation: headingCardOrbit 6.8s ease-in-out infinite;
   animation-delay: calc(var(--i) * -1.35s);
 }
 
@@ -2306,6 +2516,8 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
   body::before,
   body::after,
   #pageFxCanvas,
+  #cortexSynapseCanvas,
+  .css-motion-field,
   .topbar,
   .report-control-deck,
   .report-actions {
@@ -3019,16 +3231,23 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 @keyframes drift { to { transform: translateX(-40px); } }
 @keyframes suspendedTitle {
   0%, 100% {
-    transform: translate3d(0, 0, 0) rotateX(0deg) rotateZ(0deg);
+    transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
     filter: drop-shadow(0 0 0 rgba(118,247,255,0));
   }
-  35% {
-    transform: translate3d(0, -10px, 18px) rotateX(1.5deg) rotateZ(-0.5deg);
-    filter: drop-shadow(0 0 18px rgba(118,247,255,0.18));
+  28% {
+    transform: translate3d(0, -18px, 34px) rotateX(3.2deg) rotateY(-1.4deg) rotateZ(-0.8deg) scale(1.012);
+    filter: drop-shadow(0 0 24px rgba(118,247,255,0.32));
   }
-  68% {
-    transform: translate3d(0, 6px, 10px) rotateX(-1deg) rotateZ(0.4deg);
+  62% {
+    transform: translate3d(0, 9px, 18px) rotateX(-2deg) rotateY(1.1deg) rotateZ(0.7deg) scale(0.997);
+    filter: drop-shadow(0 0 18px rgba(245,179,53,0.22));
   }
+}
+
+@keyframes headingPodFloat {
+  0%, 100% { transform: translate3d(0, 0, 22px) rotateX(0deg); }
+  42% { transform: translate3d(0, -8px, 44px) rotateX(1.4deg); }
+  72% { transform: translate3d(0, 5px, 30px) rotateX(-0.8deg); }
 }
 
 @keyframes titleGlowSweep {
@@ -3043,8 +3262,23 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 }
 
 @keyframes headingHover {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%, 100% { transform: translate3d(0, 0, 16px) rotateX(0deg) rotateZ(0deg); }
+  36% { transform: translate3d(0, -9px, 34px) rotateX(2deg) rotateZ(-0.35deg); }
+  72% { transform: translate3d(0, 5px, 24px) rotateX(-1.1deg) rotateZ(0.28deg); }
+}
+
+@keyframes spacewalkTextBounce {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg);
+    filter: saturate(1);
+  }
+  30% {
+    transform: translate3d(0, -7px, 28px) rotateX(1.4deg) rotateY(-0.8deg);
+    filter: saturate(1.16) brightness(1.08);
+  }
+  66% {
+    transform: translate3d(0, 4px, 16px) rotateX(-0.9deg) rotateY(0.55deg);
+  }
 }
 
 @keyframes cardHoverDrift {
@@ -3057,11 +3291,39 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
     transform: translate3d(0, 0, -90px) rotateX(58deg) rotateZ(calc(-12deg + (var(--i) * 9deg))) scale(1);
   }
   42% {
-    transform: translate3d(-16px, -18px, -34px) rotateX(47deg) rotateY(13deg) rotateZ(calc(3deg + (var(--i) * 9deg))) scale(1.08);
-    opacity: .78;
+    transform: translate3d(-28px, -32px, -8px) rotateX(42deg) rotateY(18deg) rotateZ(calc(5deg + (var(--i) * 9deg))) scale(1.14);
+    opacity: .94;
   }
   74% {
-    transform: translate3d(12px, 10px, -70px) rotateX(64deg) rotateY(-8deg) rotateZ(calc(-20deg + (var(--i) * 9deg))) scale(.96);
+    transform: translate3d(18px, 18px, -64px) rotateX(64deg) rotateY(-12deg) rotateZ(calc(-20deg + (var(--i) * 9deg))) scale(.96);
+  }
+}
+
+@keyframes cortexCardDrift {
+  0%, 100% {
+    transform: translate3d(0, 0, calc(-160px + (var(--i) * 18px))) rotateX(56deg) rotateY(calc(-20deg + var(--i) * 8deg)) rotateZ(calc(-20deg + var(--i) * 11deg));
+    filter: saturate(1);
+  }
+  36% {
+    transform: translate3d(calc(-26px + var(--i) * 3px), -38px, calc(-70px + (var(--i) * 20px))) rotateX(45deg) rotateY(calc(18deg + var(--i) * 8deg)) rotateZ(calc(9deg + var(--i) * 11deg)) scale(1.08);
+    filter: saturate(1.24) brightness(1.12);
+  }
+  72% {
+    transform: translate3d(calc(22px - var(--i) * 2px), 24px, calc(-132px + (var(--i) * 16px))) rotateX(62deg) rotateY(calc(-32deg + var(--i) * 6deg)) rotateZ(calc(-34deg + var(--i) * 9deg)) scale(.94);
+  }
+}
+
+@keyframes vaultCardPrismFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, calc(-220px + var(--i) * 24px)) rotateX(64deg) rotateY(calc(-34deg + var(--i) * 10deg)) rotateZ(calc(-24deg + var(--i) * 8deg));
+    filter: saturate(1) brightness(1);
+  }
+  30% {
+    transform: translate3d(calc(34px - var(--i) * 3px), -48px, calc(-78px + var(--i) * 22px)) rotateX(42deg) rotateY(calc(34deg + var(--i) * 10deg)) rotateZ(calc(18deg + var(--i) * 10deg)) scale(1.1);
+    filter: saturate(1.34) brightness(1.18);
+  }
+  62% {
+    transform: translate3d(calc(-24px + var(--i) * 2px), 34px, calc(-162px + var(--i) * 18px)) rotateX(72deg) rotateY(calc(-54deg + var(--i) * 8deg)) rotateZ(calc(-42deg + var(--i) * 8deg)) scale(.96);
   }
 }
 
@@ -3078,6 +3340,17 @@ video, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-
 
 @keyframes brandHalo {
   to { --brand-spin: 360deg; transform: rotate(360deg); }
+}
+
+@keyframes brandPrismFallback {
+  0%, 100% {
+    transform: rotateX(58deg) rotateZ(-18deg) translateY(1px) scale(1);
+    filter: drop-shadow(0 0 14px rgba(118,247,255,.52));
+  }
+  50% {
+    transform: rotateX(46deg) rotateY(14deg) rotateZ(16deg) translateY(-4px) scale(1.12);
+    filter: drop-shadow(0 0 24px rgba(245,179,53,.46)) drop-shadow(0 0 18px rgba(118,247,255,.56));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

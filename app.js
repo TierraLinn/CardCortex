@@ -15,6 +15,11 @@ const CERTIFICATE_STORE_KEY = "cardcortex-certificates";
 const storage = createStorage();
 const billing = window.CardCortexBilling || null;
 const supabaseApi = window.CardCortexSupabase || null;
+const motionPointer = {
+  x: typeof window !== "undefined" ? window.innerWidth * 0.68 : 0,
+  y: typeof window !== "undefined" ? window.innerHeight * 0.22 : 0,
+  strength: 0,
+};
 window.CardCortexStorage = storage;
 
 function createStorage() {
@@ -45,8 +50,17 @@ document.querySelectorAll("nav a").forEach((link) => {
 window.addEventListener("pointermove", (event) => {
   document.documentElement.style.setProperty("--mx", `${event.clientX}px`);
   document.documentElement.style.setProperty("--my", `${event.clientY}px`);
+  motionPointer.x = event.clientX;
+  motionPointer.y = event.clientY;
+  motionPointer.strength = 1;
 });
 
+window.addEventListener("pointerleave", () => {
+  motionPointer.strength = 0;
+});
+
+initCortexSynapseCanvas();
+initVisibleMotionFallback();
 if (page === "home") renderHomeCommandCenter();
 if (page === "vault") renderVault();
 if (page === "scanner") initScanner();
@@ -65,6 +79,209 @@ function totalValue(items = cards) {
 
 function getBillingSummary() {
   return billing ? billing.getUsageSummary(cards.length) : null;
+}
+
+function initCortexSynapseCanvas() {
+  if (document.getElementById("cortexSynapseCanvas")) return;
+  const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  const canvas = document.createElement("canvas");
+  canvas.id = "cortexSynapseCanvas";
+  canvas.setAttribute("aria-hidden", "true");
+  document.body.prepend(canvas);
+  const ctx = canvas.getContext("2d");
+  if (!ctx || reducedMotion) return;
+
+  let width = 0;
+  let height = 0;
+  let pixelRatio = 1;
+  let nodes = [];
+  let pulse = 0;
+  const labels = getMotionLabels();
+
+  function resetNodes() {
+    const area = Math.max(1, width * height);
+    const count = Math.max(42, Math.min(96, Math.round(area / 18500)));
+    nodes = Array.from({ length: count }, (_, index) => {
+      const angle = (index / count) * Math.PI * 2;
+      const ribbon = index % 3;
+      return {
+        x: width * (0.5 + Math.cos(angle) * (0.14 + ribbon * 0.1)) + (Math.random() - 0.5) * width * 0.38,
+        y: height * (0.5 + Math.sin(angle * 1.28) * (0.18 + ribbon * 0.07)) + (Math.random() - 0.5) * height * 0.28,
+        vx: (Math.random() - 0.5) * 0.34,
+        vy: (Math.random() - 0.5) * 0.34,
+        r: 1.4 + Math.random() * 2.7,
+        hue: index % 5,
+        phase: Math.random() * Math.PI * 2,
+        label: labels[index % labels.length],
+      };
+    });
+  }
+
+  function resize() {
+    pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.floor(width * pixelRatio);
+    canvas.height = Math.floor(height * pixelRatio);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    resetNodes();
+  }
+
+  function nodeColor(index, alpha = 1) {
+    return [
+      `rgba(118, 247, 255, ${alpha})`,
+      `rgba(134, 231, 255, ${alpha})`,
+      `rgba(245, 179, 53, ${alpha})`,
+      `rgba(255, 255, 255, ${alpha})`,
+      `rgba(91, 141, 255, ${alpha})`,
+    ][index % 5];
+  }
+
+  function draw(timestamp = 0) {
+    pulse += 0.012;
+    motionPointer.strength *= 0.986;
+    ctx.clearRect(0, 0, width, height);
+    const time = timestamp * 0.001;
+    const maxDistance = Math.min(230, Math.max(142, width * 0.14));
+
+    for (let i = 0; i < nodes.length; i += 1) {
+      const node = nodes[i];
+      const pointerDx = motionPointer.x - node.x;
+      const pointerDy = motionPointer.y - node.y;
+      const pointerDistance = Math.hypot(pointerDx, pointerDy) || 1;
+      if (pointerDistance < 280) {
+        const force = (1 - pointerDistance / 280) * motionPointer.strength * 0.026;
+        node.vx += (pointerDx / pointerDistance) * force;
+        node.vy += (pointerDy / pointerDistance) * force;
+      }
+      node.vx += Math.cos(time * 0.78 + node.phase) * 0.0036;
+      node.vy += Math.sin(time * 0.72 + node.phase) * 0.0036;
+      node.vx *= 0.986;
+      node.vy *= 0.986;
+      node.x += node.vx;
+      node.y += node.vy;
+      if (node.x < -60) node.x = width + 60;
+      if (node.x > width + 60) node.x = -60;
+      if (node.y < -60) node.y = height + 60;
+      if (node.y > height + 60) node.y = -60;
+    }
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < nodes.length; i += 1) {
+      const a = nodes[i];
+      for (let j = i + 1; j < nodes.length; j += 1) {
+        const b = nodes[j];
+        const distance = Math.hypot(a.x - b.x, a.y - b.y);
+        if (distance > maxDistance) continue;
+        const alpha = (1 - distance / maxDistance) * 0.34;
+        const pulseTravel = (Math.sin(pulse * 2.8 + i * 0.9 + j * 0.17) + 1) / 2;
+        const midX = a.x + (b.x - a.x) * pulseTravel;
+        const midY = a.y + (b.y - a.y) * pulseTravel;
+        const gradient = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+        gradient.addColorStop(0, nodeColor(a.hue, alpha * 0.65));
+        gradient.addColorStop(0.48, `rgba(255, 255, 255, ${alpha * 0.9})`);
+        gradient.addColorStop(1, nodeColor(b.hue, alpha * 0.65));
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 0.7 + alpha * 3.4;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        const curve = Math.sin(time + i) * 28;
+        ctx.quadraticCurveTo((a.x + b.x) / 2 + curve, (a.y + b.y) / 2 - curve * 0.5, b.x, b.y);
+        ctx.stroke();
+        if ((i + j) % 7 === 0) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
+          ctx.beginPath();
+          ctx.arc(midX, midY, 1.3 + alpha * 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    nodes.forEach((node, index) => {
+      const glow = (Math.sin(time * 2.2 + node.phase) + 1) / 2;
+      ctx.fillStyle = nodeColor(node.hue, 0.78);
+      ctx.shadowColor = nodeColor(node.hue, 0.86);
+      ctx.shadowBlur = 16 + glow * 22;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.r + glow * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      if (index % 13 === 0) {
+        ctx.shadowBlur = 8;
+        ctx.font = "900 10px Inter, Arial, sans-serif";
+        ctx.fillStyle = `rgba(247, 251, 255, ${0.18 + glow * 0.18})`;
+        ctx.fillText(node.label, node.x + 9, node.y - 9);
+      }
+    });
+    ctx.restore();
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener("resize", resize);
+  requestAnimationFrame(draw);
+}
+
+function initVisibleMotionFallback() {
+  if (!document.querySelector(".css-motion-field")) {
+    const field = document.createElement("div");
+    field.className = "css-motion-field";
+    field.setAttribute("aria-hidden", "true");
+    field.innerHTML = getMotionLabels().map((label, index) => `<span style="--i:${index}">${escapeHtml(label)}</span>`).join("");
+    document.body.prepend(field);
+  }
+
+  document.querySelectorAll(".page-heading, .scan-result").forEach((heading) => {
+    if (heading.querySelector(".heading-orbit-field")) return;
+    const orbit = document.createElement("div");
+    orbit.className = "heading-orbit-field";
+    orbit.setAttribute("aria-hidden", "true");
+    orbit.innerHTML = getMotionLabels().slice(0, 5).map((label, index) => `<span style="--i:${index}">${escapeHtml(label)}</span>`).join("");
+    heading.prepend(orbit);
+  });
+
+  updateStoredCardConstellation();
+}
+
+function getMotionLabels() {
+  const labelsByPage = {
+    home: ["Cortex", "Universe", "Vault", "Value", "Grade", "Signal", "Prism", "Orbit"],
+    vault: ["Vault", "Binder", "Set", "Slab", "Value", "Hold", "Sync", "Signal"],
+    scanner: ["Scan", "Match", "Focus", "AI", "Value", "Save", "Prism", "Signal"],
+    pricing: ["Comps", "Market", "Value", "TCG", "eBay", "Spread", "Signal", "Pulse"],
+    upgrade: ["Pro", "Dealer", "Credits", "Vault", "Grade", "Scale", "Flow", "Access"],
+    grading: ["Front", "Back", "Edges", "Surface", "Centering", "Cert", "Micro", "Slab"],
+    marketplace: ["List", "Route", "Sell", "Comps", "Ship", "Offer", "Ledger", "Pulse"],
+    reports: ["Portfolio", "Risk", "Insurance", "Growth", "Spread", "Archive", "Signal", "Map"],
+    assistant: ["Advisor", "Ask", "Plan", "Sell", "Grade", "Hold", "Signal", "Memory"],
+    auth: ["Sync", "Secure", "Vault", "Cloud", "Account", "Private", "Key", "Trust"],
+  };
+  return labelsByPage[page] || ["Card", "Cortex", "Value", "Grade", "Vault", "Signal", "Universe", "AI"];
+}
+
+function updateStoredCardConstellation() {
+  let field = document.querySelector(".vault-card-constellation");
+  if (!field) {
+    field = document.createElement("div");
+    field.className = "vault-card-constellation";
+    field.setAttribute("aria-hidden", "true");
+    document.body.prepend(field);
+  }
+  const featuredCards = [...cards]
+    .sort((a, b) => Number(b.rawValue || 0) - Number(a.rawValue || 0))
+    .slice(0, 10);
+  field.innerHTML = featuredCards.map((card, index) => {
+    const safeColor = /^#[0-9a-f]{6}$/i.test(card.color || "") ? card.color : "#76f7ff";
+    return `
+      <article style="--i:${index}; --card-color:${safeColor}">
+        <small>${escapeHtml(card.category || "Card")}</small>
+        <strong>${escapeHtml(card.name || "Vault card")}</strong>
+        <span>${money.format(Number(card.rawValue || 0))}</span>
+      </article>
+    `;
+  }).join("");
 }
 
 async function initEntitlementSync() {
@@ -348,6 +565,7 @@ async function loadSupabaseCards(statusEl) {
     const rows = await api.listCards();
     if (rows.length) {
       cards = rows.map(dbCardToCard);
+      updateStoredCardConstellation();
       if (statusEl) statusEl.textContent = `Signed in as ${user.email}. Showing ${rows.length} saved card${rows.length === 1 ? "" : "s"}.`;
     } else {
       if (statusEl) statusEl.textContent = `Signed in as ${user.email}. Your real vault is empty, so demo cards are still shown.`;
