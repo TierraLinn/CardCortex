@@ -29,6 +29,17 @@ create table if not exists public.billing_events (
   created_at timestamptz not null default now()
 );
 
+create index if not exists user_entitlements_stripe_customer_id_idx
+on public.user_entitlements (stripe_customer_id)
+where stripe_customer_id <> '';
+
+create index if not exists user_entitlements_stripe_subscription_id_idx
+on public.user_entitlements (stripe_subscription_id)
+where stripe_subscription_id <> '';
+
+create index if not exists billing_events_user_id_idx
+on public.billing_events (user_id);
+
 alter table public.user_entitlements enable row level security;
 alter table public.billing_events enable row level security;
 
@@ -71,4 +82,3 @@ drop trigger if exists create_free_entitlement on auth.users;
 create trigger create_free_entitlement
 after insert on auth.users
 for each row execute function public.ensure_free_entitlement();
-

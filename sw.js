@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v20-stripe-addons";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v21-entitlements";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -14,7 +14,10 @@ const SHELL_ASSETS = [
   "./styles.css",
   "./data.js",
   "./billing.js",
+  "./supabase-config.js",
+  "./supabase-client.js",
   "./app.js",
+  "./auth.js",
   "./brand3d.js",
   "./hero3d.js",
   "./page3d.js",

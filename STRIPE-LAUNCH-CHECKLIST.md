@@ -53,7 +53,11 @@ Paste public Payment Link URLs into the Stripe launch console and click Save tes
 
 ## 4. Make it real after checkout
 
-For real paid enforcement, add a secure webhook that listens for Stripe subscription and checkout events, then updates:
+For real paid enforcement, use:
+
+`STRIPE-SUPABASE-WEBHOOK-SETUP.md`
+
+That deploys a secure webhook that listens for Stripe subscription and checkout events, then updates:
 
 - `public.user_entitlements.plan_id`
 - `public.user_entitlements.billing_status`

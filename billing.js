@@ -198,6 +198,18 @@
     return CHECKOUT_LINKS[addOnId]?.once || "";
   }
 
+  function withCheckoutReference(url, reference, email = "") {
+    if (!url || !reference) return url || "";
+    try {
+      const checkoutUrl = new URL(url, window.location.href);
+      checkoutUrl.searchParams.set("client_reference_id", reference);
+      if (email) checkoutUrl.searchParams.set("prefilled_email", email);
+      return checkoutUrl.toString();
+    } catch {
+      return url;
+    }
+  }
+
   function priceFor(plan, interval = getBillingInterval()) {
     if (plan.id === "free") return "$0";
     const amount = interval === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
@@ -292,6 +304,7 @@
     setBillingInterval,
     getCheckoutUrl,
     getAddOnCheckoutUrl,
+    withCheckoutReference,
     getStripeOverrides,
     setStripeOverrides,
     stripeKey,

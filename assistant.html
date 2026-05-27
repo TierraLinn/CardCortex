@@ -1,17 +1,23 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Assistant | CardCortex</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#050713" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardCortex" />
+    <link rel="stylesheet" href="./styles.css?v=monetize1" />
   </head>
   <body data-page="assistant">
     <div class="site-shell">
       <header class="topbar">
-        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
-          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./auth.html">Account</a>
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a><a href="./auth.html">Account</a>
         </nav>
         <a class="nav-cta" href="./scanner.html">Scan a card</a>
       </header>
@@ -19,16 +25,44 @@
         <section class="page-heading">
           <div>
             <h1>CardCortex AI advisor</h1>
-            <p>Ask about grading, values, selling strategy, storage, insurance records, or what to scan next.</p>
+            <p>Ask about grading, values, selling strategy, storage, insurance records, pricing plans, or what to scan next.</p>
+          </div>
+          <div id="advisorSignal" class="value-tile">
+            <small>Advisor signal</small>
+            <strong>Loading</strong>
+            <span id="advisorSignalMeta">Building vault context</span>
           </div>
         </section>
-        <section class="chat-shell">
-          <div class="prompt-rail" aria-label="Suggested AI prompts">
-            <button type="button">Which cards should I grade first?</button>
-            <button type="button">What should I sell now?</button>
-            <button type="button">How do I organize my vault?</button>
-            <button type="button">Create an insurance report plan.</button>
-          </div>
+        <section class="advisor-command-grid">
+          <article class="advisor-console">
+            <div>
+              <h2>Collection command advisor</h2>
+              <p id="advisorStatus">Reading vault, reports, certificates, and billing limits.</p>
+            </div>
+            <div id="advisorStats" class="advisor-stat-grid"></div>
+            <div class="prompt-rail" aria-label="Suggested AI prompts">
+              <button type="button">Which cards should I grade first?</button>
+              <button type="button">What should I sell now?</button>
+              <button type="button">How do I organize my vault?</button>
+              <button type="button">Create an insurance report plan.</button>
+              <button type="button">What are my biggest risks?</button>
+              <button type="button">What should I do this week?</button>
+            </div>
+            <div class="advisor-action-row">
+              <a class="secondary-button" href="./reports.html">Reports</a>
+              <a class="secondary-button" href="./upgrade.html">Upgrade</a>
+              <a class="secondary-button" href="./marketplace.html">Sell</a>
+            </div>
+          </article>
+          <section class="advisor-recommendation-board" aria-label="AI advisor recommendations">
+            <div>
+              <h2>Recommended next moves</h2>
+              <p>Live cards from the vault become one-tap workflows for grading, selling, reports, and cleanup.</p>
+            </div>
+            <div id="advisorRecommendations" class="advisor-recommendations"></div>
+          </section>
+        </section>
+        <section class="chat-shell advisor-chat-shell">
           <div id="chatLog" class="chat-log"></div>
           <form id="chatForm" class="chat-form">
             <input id="chatInput" type="text" placeholder="Ask CardCortex what to do with your cards..." />
@@ -37,8 +71,16 @@
         </section>
       </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./supabase-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./supabase-client.js"></script>
     <script src="./data.js"></script>
-    <script type="module" src="./page3d.js"></script>
-    <script src="./app.js"></script>
+    <script src="./billing.js?v=stripe6"></script>
+    <script type="module" src="./brand3d.js?v=monetize1"></script>
+    <script type="module" src="./page3d.js?v=monetize1"></script>
+    <script src="./app.js?v=entitlements1"></script>
   </body>
 </html>
