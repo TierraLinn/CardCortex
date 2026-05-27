@@ -2,3 +2,6 @@ project_id = "niqmgpgzffwujvacpgzy"
 
 [functions.sync-pokemon-catalog]
 verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
