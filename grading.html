@@ -4,52 +4,88 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Grading | CardCortex</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#050713" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardCortex" />
+    <link rel="stylesheet" href="./styles.css?v=cortex5" />
   </head>
   <body data-page="grading">
     <div class="site-shell">
       <header class="topbar">
-        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
+        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
-          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./auth.html">Account</a>
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a><a href="./auth.html">Account</a>
         </nav>
         <a class="nav-cta" href="./scanner.html">Scan condition</a>
       </header>
       <main class="app-page grading-page">
         <section class="page-heading">
           <div>
-            <h1>AI pre-grading lab</h1>
-            <p>Estimate condition from multiple inspection angles before deciding whether to submit for official grading.</p>
+            <h1>Automatic AI grading lab</h1>
+            <p>Upload the front and back of a card. CardCortex runs centering, corner, edge, surface, print, and photo-confidence checks automatically.</p>
           </div>
-          <div class="value-tile"><small>Certification preview</small><strong id="certNumber">CC-0000</strong></div>
+          <div class="value-tile"><small>Certification preview</small><strong id="certNumber">Pending scan</strong></div>
         </section>
         <section class="grading-lab">
           <div class="grade-card holo-card">
-            <span id="gradeName">Charizard 4/102</span>
-            <strong id="gradeScore">9.1</strong>
-            <small>AI confidence 88%</small>
+            <span id="gradeName">Upload front and back</span>
+            <strong id="gradeScore">--</strong>
+            <small id="gradeConfidence">No grade generated yet</small>
           </div>
           <div>
+            <section id="gradingPlanGate" class="plan-gate compact-plan-gate"></section>
             <section class="grade-photo-lab">
-              <h2>Digital grading photos</h2>
-              <p>Upload or take front, back, corner, and surface photos. The current lab produces a pre-grade estimate and photo completeness score.</p>
-              <div class="photo-slots">
-                <label><span>Front photo</span><input data-grade-photo="front" type="file" accept="image/*" capture="environment" /></label>
-                <label><span>Back photo</span><input data-grade-photo="back" type="file" accept="image/*" capture="environment" /></label>
-                <label><span>Top corners</span><input data-grade-photo="corners" type="file" accept="image/*" capture="environment" /></label>
-                <label><span>Surface glare</span><input data-grade-photo="surface" type="file" accept="image/*" capture="environment" /></label>
+              <h2>Two-photo grading scan</h2>
+              <p>Use clear, flat, front and back photos. The analyzer inspects the same condition groups collectors expect from digital grading apps.</p>
+              <div class="photo-slots two-photo-slots">
+                <label><span>Front of card</span><input data-grade-photo="front" type="file" accept="image/*" capture="environment" /></label>
+                <label><span>Back of card</span><input data-grade-photo="back" type="file" accept="image/*" capture="environment" /></label>
               </div>
               <div id="gradePhotoPreview" class="grade-photo-preview"></div>
-              <button id="runGradeButton" class="primary-button" type="button">Run AI pre-grade</button>
+              <div id="gradeHandoffNotice" class="grade-handoff-notice" hidden></div>
+              <button id="runGradeButton" class="primary-button" type="button">Run automatic grade</button>
               <p id="gradePhotoStatus">Waiting for grading photos.</p>
             </section>
+            <section class="grading-methods">
+              <h2>Grading mechanisms</h2>
+              <div class="method-grid">
+                <article data-grade-method="centering"><strong>Centering</strong><span>Waiting</span></article>
+                <article data-grade-method="corners"><strong>Corners</strong><span>Waiting</span></article>
+                <article data-grade-method="edges"><strong>Edges</strong><span>Waiting</span></article>
+                <article data-grade-method="surface"><strong>Surface</strong><span>Waiting</span></article>
+                <article data-grade-method="print"><strong>Print quality</strong><span>Waiting</span></article>
+                <article data-grade-method="whitening"><strong>Back whitening</strong><span>Waiting</span></article>
+                <article data-grade-method="confidence"><strong>Photo confidence</strong><span>Waiting</span></article>
+                <article data-grade-method="certificate"><strong>Certificate</strong><span>Waiting</span></article>
+              </div>
+            </section>
+            <section id="gradeReport" class="grade-report" hidden></section>
             <div id="gradeBreakdown" class="grade-breakdown"></div>
           </div>
         </section>
+        <section class="certificate-library-shell">
+          <div>
+            <h2>Certification library</h2>
+            <p>Saved CardCortex AI certificates stay on this device with their certificate number, front/back scan evidence, grading metrics, flags, and marketplace-ready notes.</p>
+          </div>
+          <div class="certificate-library-actions">
+            <button id="exportCertificatesButton" class="secondary-button" type="button">Export certificates</button>
+            <button id="clearCertificatesButton" class="danger-button tiny-button" type="button">Clear saved</button>
+          </div>
+          <div id="certificateLibrary" class="certificate-library"></div>
+        </section>
       </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./supabase-client.js"></script>
     <script src="./data.js"></script>
-    <script type="module" src="./page3d.js"></script>
-    <script src="./app.js"></script>
+    <script src="./billing.js?v=stripe7"></script>
+    <script type="module" src="./brand3d.js?v=cortex5"></script>
+    <script type="module" src="./page3d.js?v=cortex5"></script>
+    <script src="./app.js?v=cortex5"></script>
   </body>
 </html>

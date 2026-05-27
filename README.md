@@ -1,6 +1,12 @@
 # CardCortex
 
-CardCortex is an AI trading card vault prototype. It stores card collections, shows category-level portfolio value, simulates camera scanning, compares value signals, previews AI condition grading, and prepares marketplace selling routes.
+CardCortex is an AI-powered trading card vault web app. It stores card collections, shows portfolio value, supports camera/upload scanning workflows, compares value signals, creates digital condition reports, prepares marketplace selling routes, and connects paid plans through Stripe and Supabase.
+
+Live app:
+
+```text
+https://tierralinn.github.io/CardCortex/
+```
 
 ## Run locally
 
@@ -24,6 +30,8 @@ http://localhost:4192/index.html
 - `grading.html` - AI pre-grading lab
 - `marketplace.html` - selling route planner
 - `assistant.html` - AI advisor demo
+- `upgrade.html` - Stripe-powered plans and grading credits
+- `auth.html` - Supabase account access
 - `privacy.html` - launch privacy draft
 - `terms.html` - launch terms draft
 

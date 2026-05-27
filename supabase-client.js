@@ -92,5 +92,16 @@
       if (error) throw error;
       return data || [];
     },
+    async getEntitlement() {
+      const user = await this.getUser();
+      if (!user) return null;
+      const { data, error } = await client
+        .from("user_entitlements")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data || null;
+    },
   };
 })();
