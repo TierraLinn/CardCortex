@@ -1,33 +1,24 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CardCortex | AI Trading Card Vault</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#050713" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="CardCortex" />
-    <link rel="stylesheet" href="./styles.css?v=monetize1" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body data-page="home">
     <div class="site-shell">
       <header class="topbar">
         <a class="brand" href="./index.html" aria-label="CardCortex home">
-          <span class="brand-glyph" aria-hidden="true"></span>
+          <span class="brand-glyph">CC</span>
           <span>CardCortex</span>
         </a>
         <nav aria-label="Primary navigation">
           <a href="./vault.html">Vault</a>
           <a href="./scanner.html">Scanner</a>
           <a href="./pricing.html">Values</a>
-          <a href="./reports.html">Reports</a>
           <a href="./grading.html">AI grading</a>
           <a href="./marketplace.html">Sell</a>
-          <a href="./assistant.html">Advisor</a>
-          <a href="./upgrade.html">Upgrade</a>
           <a href="./auth.html">Account</a>
         </nav>
         <a class="nav-cta" href="./scanner.html">Scan a card</a>
@@ -57,7 +48,6 @@
             <a href="./scanner.html"><strong>Scan</strong><span>camera + upload</span></a>
             <a href="./grading.html"><strong>Grade</strong><span>AI condition lab</span></a>
             <a href="./pricing.html"><strong>Value</strong><span>market signal spread</span></a>
-            <a href="./reports.html"><strong>Report</strong><span>portfolio records</span></a>
             <a href="./marketplace.html"><strong>Sell</strong><span>route planner</span></a>
           </div>
         </section>
@@ -77,44 +67,29 @@
           <span>Custom sets</span>
         </section>
 
-        <section class="home-command-center" aria-label="CardCortex collector command center">
-          <div class="command-copy">
-            <h2>2026 collector command center.</h2>
-            <p>CardCortex works like a live collection operating system: vault value, grading queue, selling route, insurance snapshot, advisor plan, upgrade limits, and launch readiness all in one place.</p>
-            <div class="command-actions">
-              <a class="primary-button" href="./assistant.html">Ask the advisor</a>
-              <a class="secondary-button" href="./upgrade.html">Open upgrade plans</a>
-            </div>
-          </div>
-          <div class="command-dashboard">
-            <div id="homeCommandStats" class="home-command-stats"></div>
-            <div id="homeCommandBoard" class="home-command-board"></div>
-          </div>
-        </section>
-
         <section class="feature-band">
           <div>
             <h2>Built beyond a price checker.</h2>
-            <p>Most tools stop at â€œscan and store.â€ CardCortex is designed as a collection operating system: valuation, grading, selling, insurance-ready records, wishlists, portfolio analytics, and AI guidance.</p>
+            <p>Most tools stop at “scan and store.” CardCortex is designed as a collection operating system: valuation, grading, selling, insurance-ready records, wishlists, portfolio analytics, and AI guidance.</p>
           </div>
           <div class="feature-grid">
             <article>
-              <span class="feature-icon">â—ˆ</span>
+              <span class="feature-icon">◈</span>
               <h3>Universal card vault</h3>
               <p>Organize every card type by franchise, set, rarity, condition, storage box, binder page, and sale status.</p>
             </article>
             <article>
-              <span class="feature-icon">â—Ž</span>
+              <span class="feature-icon">◎</span>
               <h3>Multi-source valuation</h3>
               <p>Compare marketplace-style signals from eBay, TCGPlayer, Cardmarket, PriceCharting, and set-specific references.</p>
             </article>
             <article>
-              <span class="feature-icon">âœ¦</span>
+              <span class="feature-icon">✦</span>
               <h3>AI pre-grade studio</h3>
               <p>Estimate centering, corners, edges, surface, print defects, glare, and confidence before official grading.</p>
             </article>
             <article>
-              <span class="feature-icon">â†—</span>
+              <span class="feature-icon">↗</span>
               <h3>Sell-route engine</h3>
               <p>Prepare listing copy, photo checklists, price bands, and marketplace routing for credible selling sites.</p>
             </article>
@@ -146,9 +121,7 @@
       </main>
     </div>
     <script src="./data.js"></script>
-    <script src="./billing.js?v=stripe5"></script>
-    <script type="module" src="./brand3d.js?v=monetize1"></script>
-    <script type="module" src="./hero3d.js?v=monetize1"></script>
-    <script src="./app.js?v=monetize1"></script>
+    <script type="module" src="./hero3d.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>
