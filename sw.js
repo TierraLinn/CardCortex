@@ -1,4 +1,4 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v27-cortex-universe";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v28-launch-clean";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

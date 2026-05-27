@@ -4,20 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scanner | CardCortex</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#050713" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="CardCortex" />
-    <link rel="stylesheet" href="./styles.css?v=cortex4" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body data-page="scanner">
     <div class="site-shell">
       <header class="topbar">
-        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
+        <a class="brand" href="./index.html"><span class="brand-glyph">CC</span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
-          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a><a href="./auth.html">Account</a>
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./auth.html">Account</a>
         </nav>
         <a class="nav-cta" href="./vault.html">View vault</a>
       </header>
@@ -27,20 +21,6 @@
             <video id="cameraFeed" autoplay playsinline muted></video>
             <canvas id="scanCanvas"></canvas>
             <div class="scan-reticle"><span></span><span></span><span></span><span></span></div>
-          </div>
-          <div class="scan-intelligence">
-            <article>
-              <small>Frame lock</small>
-              <strong id="scanFrameScore">Waiting</strong>
-            </article>
-            <article>
-              <small>Card border</small>
-              <strong id="scanBorderScore">Waiting</strong>
-            </article>
-            <article>
-              <small>Focus signal</small>
-              <strong id="scanFocusScore">Waiting</strong>
-            </article>
           </div>
           <div class="scanner-actions">
             <button id="cameraButton" class="primary-button" type="button">Start camera</button>
@@ -53,8 +33,7 @@
         </section>
         <aside class="scan-result">
           <h1>AI scanner</h1>
-          <p>Use camera or upload to inspect the image, score the scan quality, search live/synced catalog matches, then save the reviewed card into your vault.</p>
-          <div id="scannerPlanGate" class="plan-gate compact-plan-gate"></div>
+          <p>Prototype scanner uses your camera or uploaded image, then simulates the card-identification pipeline that will later connect to vision AI and pricing APIs.</p>
           <div id="scanStatus" class="ai-panel">Waiting for a scan.</div>
           <div id="scanResult"></div>
         </aside>
@@ -64,9 +43,7 @@
     <script src="./supabase-config.js"></script>
     <script src="./supabase-client.js"></script>
     <script src="./data.js"></script>
-    <script src="./billing.js?v=stripe7"></script>
-    <script type="module" src="./brand3d.js?v=cortex4"></script>
-    <script type="module" src="./page3d.js?v=cortex4"></script>
-    <script src="./app.js?v=cortex4"></script>
+    <script type="module" src="./page3d.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>
