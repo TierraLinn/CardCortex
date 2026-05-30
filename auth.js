@@ -1,6 +1,7 @@
 const api = window.CardCortexSupabase;
 const authForm = document.querySelector("#authForm");
 const signUpButton = document.querySelector("#signUpButton");
+const resendConfirmationButton = document.querySelector("#resendConfirmationButton");
 const signOutButton = document.querySelector("#signOutButton");
 const authStatus = document.querySelector("#authStatus");
 const sessionStatus = document.querySelector("#sessionStatus");
@@ -32,8 +33,19 @@ signUpButton.addEventListener("click", async () => {
   const password = document.querySelector("#authPassword").value;
   authStatus.textContent = "Creating account...";
   const { error } = await api.signUp(email, password);
-  authStatus.textContent = error ? error.message : "Account created. Check email confirmation if Supabase requires it.";
+  authStatus.textContent = error ? error.message : "Account created. Check your email and open the confirmation link in this browser.";
   await refreshSession();
+});
+
+resendConfirmationButton?.addEventListener("click", async () => {
+  const email = document.querySelector("#authEmail").value.trim();
+  if (!email) {
+    authStatus.textContent = "Enter your email first, then resend confirmation.";
+    return;
+  }
+  authStatus.textContent = "Sending confirmation email...";
+  const { error } = await api.resendConfirmation(email);
+  authStatus.textContent = error ? error.message : "Confirmation email sent. Open the newest email link.";
 });
 
 signOutButton.addEventListener("click", async () => {

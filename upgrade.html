@@ -17,7 +17,7 @@
       <header class="topbar">
         <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
-          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a><a href="./auth.html">Account</a>
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./catalog-sources.html">Sources</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a><a href="./auth.html">Account</a>
         </nav>
         <a class="nav-cta" href="./auth.html">Account</a>
       </header>
@@ -52,7 +52,7 @@
         <section class="stripe-setup-shell">
           <div>
             <h2>Stripe launch console</h2>
-            <p>Paste public Stripe Payment Link URLs here for testing. For the real public app, send me those public links and I will lock them into the deployed files.</p>
+            <p>Public Stripe Payment Links are already wired. This local maintenance console can override links in your browser while paid access is granted through the Supabase Stripe webhook.</p>
           </div>
           <form id="stripeLinkForm" class="stripe-link-form">
             <label>Collector monthly<input name="collector:monthly" type="url" placeholder="https://buy.stripe.com/..." /></label>
@@ -77,8 +77,8 @@
           </article>
           <article>
             <strong>2</strong>
-            <h2>Webhook next</h2>
-            <p>A backend webhook should confirm payments and write the real plan to Supabase entitlements.</p>
+            <h2>Webhook-backed access</h2>
+            <p>The Supabase Edge webhook confirms payments and writes the real plan to Supabase entitlements.</p>
           </article>
           <article>
             <strong>3</strong>
@@ -90,11 +90,11 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js"></script>
-    <script src="./supabase-client.js"></script>
+    <script src="./supabase-client.js?v=multiuser2"></script>
     <script src="./data.js"></script>
-    <script src="./billing.js?v=stripe7"></script>
+    <script src="./billing.js?v=stripe8"></script>
     <script type="module" src="./brand3d.js?v=cortex5"></script>
     <script type="module" src="./page3d.js?v=cortex5"></script>
-    <script src="./app.js?v=cortex5"></script>
+    <script src="./app.js?v=cortex8"></script>
   </body>
 </html>

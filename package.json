@@ -5,6 +5,18 @@
   "type": "commonjs",
   "scripts": {
     "start": "node static-server.cjs",
-    "check": "node --check data.js && node --check app.js && node --check static-server.cjs"
+    "check": "node --check data.js && node --check app.js && node --check static-server.cjs",
+    "check:all": "node --check data.js && node --check app.js && node --check static-server.cjs && node --check backend-status.js && node --check catalog-sources.js && node --check auth.js && node --check billing.js && node --check supabase-client.js && node --check sw.js && node --check scripts/supabase-admin.cjs && node --check scripts/verify-publish.cjs && node --check scripts/wait-live-publish.cjs && node --check scripts/write-upload-manifest.cjs && node --check scripts/live-delta-report.cjs && node --check scripts/github-publish-helper.cjs",
+    "verify:publish": "node scripts/verify-publish.cjs",
+    "verify:live": "node scripts/verify-publish.cjs --live-required",
+    "wait:live": "node scripts/wait-live-publish.cjs",
+    "write:manifest": "node scripts/write-upload-manifest.cjs",
+    "write:live-delta": "node scripts/live-delta-report.cjs",
+    "supabase:check": "node scripts/supabase-admin.cjs check",
+    "supabase:admin-check": "node scripts/supabase-admin.cjs admin-check",
+    "supabase:copy-sources-sql": "node scripts/supabase-admin.cjs copy-sql SUPABASE-CATALOG-SOURCES-REPAIR.sql",
+    "github:check": "node scripts/github-publish-helper.cjs check",
+    "github:publish": "node scripts/github-publish-helper.cjs publish",
+    "github:publish:prompt": "powershell -ExecutionPolicy Bypass -File ./PUBLISH-WITH-GITHUB-TOKEN.ps1"
   }
 }

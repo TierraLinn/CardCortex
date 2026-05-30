@@ -1,0 +1,622 @@
+{
+  "generatedAt": "2026-05-30T22:33:12.653Z",
+  "app": "CardCortex",
+  "fileCount": 123,
+  "files": [
+    {
+      "path": "_headers",
+      "bytes": 113,
+      "sha256": "58622293678374685179b857f9617e597190c0787a159661dd8ae464ac1a5d17"
+    },
+    {
+      "path": "_redirects",
+      "bytes": 305,
+      "sha256": "5a5e83ee1a499fe0f27e9ddc2f6bbdd9de74d373a80a98bb6c1e5d59066f3e9f"
+    },
+    {
+      "path": ".env.example",
+      "bytes": 114,
+      "sha256": "cddf59d430c5c86d13573c39a6b3409d08c6f374ed9e521d8634bc46f9c4f633"
+    },
+    {
+      "path": ".github/workflows/pages.yml",
+      "bytes": 698,
+      "sha256": "1bf74e14cc325eb9fb73087988e5667a5c12e91cef73ac08d42605bf9a8b532f"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 83,
+      "sha256": "00c1a12ffaf0d2495f878bc7db703ac932d78a1f3b11dbdb077758e0f0dc6948"
+    },
+    {
+      "path": ".nojekyll",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "app-icon.svg",
+      "bytes": 2988,
+      "sha256": "cb12917c4ff906a7710e396a4bef6075a634faece9f9fc5bfbb6a9623fbf5de6"
+    },
+    {
+      "path": "app.js",
+      "bytes": 151501,
+      "sha256": "c6b8dee8dee71e45755d8f7dea71d92ffcbc5d50eaa398aa2de3867dcc508bf9"
+    },
+    {
+      "path": "assistant.html",
+      "bytes": 4372,
+      "sha256": "a8611f5b7b3ea455c4495f36e36d85232ba7e54af7634ec3cd6655bec67bbf39"
+    },
+    {
+      "path": "auth.html",
+      "bytes": 3868,
+      "sha256": "f3b25b2686d3cfbabb9c0e157800a8b5f386b4e271fc08026029a80a39d0c869"
+    },
+    {
+      "path": "auth.js",
+      "bytes": 3889,
+      "sha256": "fae59e8bfb20e44a702160cd508b0fb1306d791e1b9156e2dbc4cef5931dd130"
+    },
+    {
+      "path": "backend-status.html",
+      "bytes": 4135,
+      "sha256": "b39e550585e8f2e0dbf35fc5d7b0732439607d8add2a40e3bd85eea7fa932f53"
+    },
+    {
+      "path": "backend-status.js",
+      "bytes": 6174,
+      "sha256": "51596aafe7e5cfe5fe79851084393a014c5c7f1f0d62eefb69490dfe583045dd"
+    },
+    {
+      "path": "billing.js",
+      "bytes": 11285,
+      "sha256": "a59b25b3da4157d441ea2dca8dc38ec43cd645558492586c958c216b595e5f52"
+    },
+    {
+      "path": "brand3d.js",
+      "bytes": 8623,
+      "sha256": "ec35f2dc62d7f39086b2b01d035fdcf51b26db017a280e0eb868ddaabf3b5645"
+    },
+    {
+      "path": "catalog-sources.html",
+      "bytes": 4059,
+      "sha256": "862fb9e1cb6520c4c89c5a1bfb23289a0a7f0ed4e5418084f955e50e0e76a0ea"
+    },
+    {
+      "path": "catalog-sources.js",
+      "bytes": 8064,
+      "sha256": "d943c28532c360f3a5f2ccf066b0f3d638cdf2c41f73a695c62ab368df88fe84"
+    },
+    {
+      "path": "CLICK-TO-PUBLISH-CARDCORTEX.bat",
+      "bytes": 117,
+      "sha256": "cce6046a4d04fdc8ddf15ac2ead35b0e0eb96903e7c07fd7a1bc49ea4bd413ce"
+    },
+    {
+      "path": "CLOUDFLARE-GITHUB-FREE-LAUNCH.md",
+      "bytes": 1907,
+      "sha256": "9d723be5d187889793b86ee6b98ff44523123cd8de8930606932fe49400f6b64"
+    },
+    {
+      "path": "data.js",
+      "bytes": 4089,
+      "sha256": "1349989c345816006876462dead32f6c62f624a943135e0d61c118ee6aa5a48e"
+    },
+    {
+      "path": "DEPLOYMENT-LAUNCH.md",
+      "bytes": 2593,
+      "sha256": "d5cc73b1a5ca94e3dda701bb922d4148545f9907d58505f81dea0f598b5ffda8"
+    },
+    {
+      "path": "grading.html",
+      "bytes": 5631,
+      "sha256": "c2ff7b0847bd8d919ce494976ea9795f9e0f1557ef696effd0b7c73743c3144d"
+    },
+    {
+      "path": "hero3d.js",
+      "bytes": 7904,
+      "sha256": "5a164d2be8cc1ee5fc871b7b5c5a4a1f3d3c38fe7fa06a03ec3ff5d95ef903dd"
+    },
+    {
+      "path": "index.html",
+      "bytes": 7383,
+      "sha256": "63f3677a430bf9ebe75200854af2f750e3f0ee1d6ab51af5498dacd4253b466d"
+    },
+    {
+      "path": "LAUNCH-STATUS.md",
+      "bytes": 2030,
+      "sha256": "0000ff9765c016dc4c1021d9eb683e4f13b05411ad4d8790be0762dc439ce0d8"
+    },
+    {
+      "path": "LIVE-DELTA-REPORT.md",
+      "bytes": 1255,
+      "sha256": "8e2309bac59106ff557054468a5f8275d5fd204e649dccdccca21628a912f936"
+    },
+    {
+      "path": "manifest.webmanifest",
+      "bytes": 787,
+      "sha256": "91c3f5e2fe4d95036827834dcfa74e576333b67b392d524c8ed45e09a23fb3c6"
+    },
+    {
+      "path": "marketplace.html",
+      "bytes": 3890,
+      "sha256": "bc9ab65051f60344354a0751021a87d7ba686067c6fc6a65ebabbd9038a7f539"
+    },
+    {
+      "path": "netlify.toml",
+      "bytes": 958,
+      "sha256": "0594c78ba87c6689cac562f987f98a2c79fbf6e23bd5d35bb9a8b8034d1a3744"
+    },
+    {
+      "path": "package.json",
+      "bytes": 1599,
+      "sha256": "517aa13495764e8440c9521226b14f0a72f189ebc8f9b901166ad652d9b219ed"
+    },
+    {
+      "path": "page3d.js",
+      "bytes": 7941,
+      "sha256": "3e09b197d1a7ab63b00c7db2810b65b4382aeb4de7b48226f28552c568942708"
+    },
+    {
+      "path": "pricing.html",
+      "bytes": 3493,
+      "sha256": "2b0132db5f46da9e70c2ce2acd22d052725a64d4ad8aecf9b2ef2dd498d07048"
+    },
+    {
+      "path": "privacy.html",
+      "bytes": 2763,
+      "sha256": "1db0c9400cd842db993972afab90decee5a274700a5ea87724b38d8e4b7eaa0d"
+    },
+    {
+      "path": "PUBLISH-NOW.md",
+      "bytes": 3237,
+      "sha256": "8c64692b6a2791181168e16b4d9639f61da2df5532483e26fab9ca06f20e6fce"
+    },
+    {
+      "path": "PUBLISH-WITH-GITHUB-TOKEN.ps1",
+      "bytes": 1458,
+      "sha256": "82318f7ec893f498f58d576822ec2490116ab3a607d5db373c5ce115acb6615a"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2326,
+      "sha256": "2f285ff9e221dc3fcb63a95a84464e262020a0eb3c5d73d4e563205dda9b819a"
+    },
+    {
+      "path": "reports.html",
+      "bytes": 4732,
+      "sha256": "73fbe7eb7a8df80730ebff77322295f29763dfa88d748a3647fc4b682c573903"
+    },
+    {
+      "path": "review/3d-grading-polished.png",
+      "bytes": 542294,
+      "sha256": "65cd8db750ff235ba169d1ea74cb9716bf2741ce325ea7840c3fde31b8dfbee6"
+    },
+    {
+      "path": "review/3d-grading.png",
+      "bytes": 571414,
+      "sha256": "096979485e9771907940658c6d8201aedba79b31dee7aad3b4a56a3dac7afa59"
+    },
+    {
+      "path": "review/3d-pricing.png",
+      "bytes": 410294,
+      "sha256": "9842b209127ff8b246df61ab1d2ac13bef4c0b56f98dbc92db7c69a7f738ab5f"
+    },
+    {
+      "path": "review/3d-scanner.png",
+      "bytes": 492898,
+      "sha256": "583c21cfab0c144bcc3cd296ff1d96a9ecfe49f9ce7698a0b47795bf1c97b6ba"
+    },
+    {
+      "path": "review/3d-vault.png",
+      "bytes": 401494,
+      "sha256": "490881b40dc5056b9240ecc1de8f8849d7e5d6f52824df71c5919b4d368481e0"
+    },
+    {
+      "path": "review/cardcortex-3d-landing-fixed.png",
+      "bytes": 983121,
+      "sha256": "4bc7bdd42285404a5849445c549d75b5f65b0b27f4aeacc69a05b60749e997b1"
+    },
+    {
+      "path": "review/cardcortex-3d-landing.png",
+      "bytes": 900413,
+      "sha256": "afd03ab2c62038e9b6350074b2fc05d0b447a32dfddc7317ff4a030d84e14f88"
+    },
+    {
+      "path": "review/cardcortex-3d-mobile-fixed.png",
+      "bytes": 253044,
+      "sha256": "bd8803634c4e774e55a88e0b9800d555b41a252ea8a591bb83588de6e3ce1696"
+    },
+    {
+      "path": "review/cardcortex-3d-mobile.png",
+      "bytes": 267509,
+      "sha256": "6aa768e86d6e6067b8f6a9015c75bd4cdc09991119d188980893d9354ef765dc"
+    },
+    {
+      "path": "review/cardcortex-3d-tagline.png",
+      "bytes": 979725,
+      "sha256": "dc07ec0654caf7c837891b23d5fe6e46ead3a25b04e1b599a449c64bec5b152a"
+    },
+    {
+      "path": "review/cardcortex-assistant.png",
+      "bytes": 244835,
+      "sha256": "8461f6c6adc40bee88e3e5ca99f9edb5ceba8abb8d6e9649515c51263f49b639"
+    },
+    {
+      "path": "review/cardcortex-auth.png",
+      "bytes": 407195,
+      "sha256": "2404723712482677b27189807b36749b37cfc38e068a959d6eb2b847fea6f9cd"
+    },
+    {
+      "path": "review/cardcortex-grading.png",
+      "bytes": 440404,
+      "sha256": "085de96d66a7b8335b432eb7e03c9cef2f3021fe04b1049619f5b0ea6278f44a"
+    },
+    {
+      "path": "review/cardcortex-home.png",
+      "bytes": 668939,
+      "sha256": "22d54b2abaa9d36cdb134c6844556e2c6241567ccddf6d30c99482f206a8f21d"
+    },
+    {
+      "path": "review/cardcortex-marketplace.png",
+      "bytes": 363720,
+      "sha256": "3007a8a82da6d830bd578c8a493775ff3b566314cb363968453842adb2e43593"
+    },
+    {
+      "path": "review/cardcortex-mobile-final.png",
+      "bytes": 253238,
+      "sha256": "f94a5f071a29403874871f61b2c995952b29ced85a6237742d573fb0724e6e74"
+    },
+    {
+      "path": "review/cardcortex-mobile-fixed.png",
+      "bytes": 254991,
+      "sha256": "e379181af70128d7c1f14f00842d5381f5dcfab82cf7387f61106831b9834388"
+    },
+    {
+      "path": "review/cardcortex-mobile.png",
+      "bytes": 270218,
+      "sha256": "31ab86fde579f0b406c61ef11d1db350addf282d7268c561e48fa8a89c4b728d"
+    },
+    {
+      "path": "review/cardcortex-pricing.png",
+      "bytes": 250466,
+      "sha256": "5a92d8793d0e565ef26efc2dd7a703b58c92f117c30209323d612569eeaef48a"
+    },
+    {
+      "path": "review/cardcortex-scanner.png",
+      "bytes": 334468,
+      "sha256": "891ae596e05b2524425f40e00c6d780121923c2a815261b609abfc4a0fe59121"
+    },
+    {
+      "path": "review/cardcortex-vault-supabase.png",
+      "bytes": 295910,
+      "sha256": "3765b1be23a66bb885aac2ab879d1868ea90ce28c8c62bc217721000558469a2"
+    },
+    {
+      "path": "review/cardcortex-vault.png",
+      "bytes": 340915,
+      "sha256": "ccad6a863b28b9c61494de668a278bb1ad6c34e8dc4f160f3f74a902e95cdc1c"
+    },
+    {
+      "path": "review/catalog-search-values.png",
+      "bytes": 476701,
+      "sha256": "2296755373e754f68020b8157191ab52acad6e52c85692b1866ae1524e622799"
+    },
+    {
+      "path": "review/certificate-library-flow.png",
+      "bytes": 270951,
+      "sha256": "034ef37f22bfd586b619564fd935eb117e604d74c2d5af3f18d0c06e480da261"
+    },
+    {
+      "path": "review/certificate-library-visible.png",
+      "bytes": 198309,
+      "sha256": "358d4f5d961830af7c79084b47e480a99dc9cc0fda2e7eaa05f50d81f805b1e7"
+    },
+    {
+      "path": "review/cortex-motion-home.png",
+      "bytes": 1176124,
+      "sha256": "ae8a9ac20779747fec75103a852eb2725c8483aa892eb438a6b7a2fb983b7282"
+    },
+    {
+      "path": "review/cortex-motion-vault.png",
+      "bytes": 1168908,
+      "sha256": "361e3c3364cf8206237dd2fb7ed8a7085410ccc067da7aba3e53f62d6eb63fc2"
+    },
+    {
+      "path": "review/cortex-universe-home-final.png",
+      "bytes": 1099097,
+      "sha256": "605910b34943474ca6815578bc15bd2c42addb111abc7cb1fb552d17f789cb3c"
+    },
+    {
+      "path": "review/cortex-universe-home.png",
+      "bytes": 1393664,
+      "sha256": "544d10570453f2701308cf344c2e8cd4b04dfd47e99d9a74ad4f565efaa1f095"
+    },
+    {
+      "path": "review/cortex-universe-vault-final.png",
+      "bytes": 847773,
+      "sha256": "420b7c3c94c46b52d23ff6d1e8e3475560eb839124d3ac29f1b992b991b27e64"
+    },
+    {
+      "path": "review/cortex-universe-vault.png",
+      "bytes": 1168105,
+      "sha256": "c27d2b71a60a7bde482beb1c96882d43fb7b021c0968284eace258066581cb14"
+    },
+    {
+      "path": "review/final-live-cortex5-home.png",
+      "bytes": 1098639,
+      "sha256": "00e97fa19fde6fc4d2c517b7a936aef8f6101756aec93b42a03e0967bf998a36"
+    },
+    {
+      "path": "review/live-assistant.png",
+      "bytes": 180678,
+      "sha256": "e598517cf811b7d45ef4918df312a2dd817f7cf4ccec7f5ef5e666eb09239997"
+    },
+    {
+      "path": "review/live-auth-after-upload.png",
+      "bytes": 379547,
+      "sha256": "d659ce5571f628c7e54a864b91a9b5662435685783986caa8eb2f3211b659fa4"
+    },
+    {
+      "path": "review/live-catalog-search.png",
+      "bytes": 465752,
+      "sha256": "4449381a01db37725b38430f9c886fe85a0cdf029747928e97de812a14eef61b"
+    },
+    {
+      "path": "review/live-cortex4-home.png",
+      "bytes": 1078513,
+      "sha256": "5fc05b22d65b76d2f35c9ee3ac9f4bad5bf768772c439b136e093e1941ec04aa"
+    },
+    {
+      "path": "review/live-grading.png",
+      "bytes": 395273,
+      "sha256": "ca88ebee36235ec67ac2c686f90dcca67335cfc5947301f3b1c13ad39e07f746"
+    },
+    {
+      "path": "review/live-index.png",
+      "bytes": 555183,
+      "sha256": "56df01ee5fe3670b0f6bbc741fa64122a52f8f2e562eb551d2e6f7b8631f7b6c"
+    },
+    {
+      "path": "review/live-marketplace.png",
+      "bytes": 312259,
+      "sha256": "d8c2c4156761f8876635ae6853d6001f2e3d790f64a249592a690da310666bef"
+    },
+    {
+      "path": "review/live-pricing.png",
+      "bytes": 227767,
+      "sha256": "15c5c6e301ce7221544ad0f0d0b2dd44b42b623c58ff6677aa75a7764e9ba466"
+    },
+    {
+      "path": "review/live-scanner.png",
+      "bytes": 276105,
+      "sha256": "bc78c9b0757e84188f0bdd1166ebdcfa18407452467ef52f197419a6358c86e0"
+    },
+    {
+      "path": "review/live-values-latest.png",
+      "bytes": 403565,
+      "sha256": "b7caf582dc1dec7a30e591e9ea877741559a36549bd2e78e218f66600ed83db7"
+    },
+    {
+      "path": "review/live-vault.png",
+      "bytes": 262587,
+      "sha256": "12e8c56f338d6e29e2441e0e17b0f52bb1dd2b829902d21e790e6c1dd8253eaa"
+    },
+    {
+      "path": "review/motion-grading-desktop.png",
+      "bytes": 1010487,
+      "sha256": "69ebd379aa9576c51ea956265e8c91a1ea5b765711ed962eb8343a022510afd8"
+    },
+    {
+      "path": "review/motion-home-desktop.png",
+      "bytes": 1014637,
+      "sha256": "608e315a16c2ca839337519f2e4cda420f431a2d213af848b8f413061b8adc10"
+    },
+    {
+      "path": "review/motion-marketplace-desktop.png",
+      "bytes": 1028179,
+      "sha256": "077948a0d303e9c6a42a2fb2607c7b79699bb05dd68133ce23c9e6543c9e630b"
+    },
+    {
+      "path": "review/motion-scanner-desktop.png",
+      "bytes": 602853,
+      "sha256": "8a061037c6ce829746756eb349afe46017842340eea3d6f1d1994e8e9d47cb37"
+    },
+    {
+      "path": "review/motion-vault-desktop.png",
+      "bytes": 881535,
+      "sha256": "3a3c6f9660eb0181cbe09743a4468ac9363e0d206ba4dc4492e485b64eb5d7c7"
+    },
+    {
+      "path": "review/motion-vault.png",
+      "bytes": 33221,
+      "sha256": "e2d4c81d6ecdeee21e7465ab02e0abb4408247e198310ff36ca894767a4769b6"
+    },
+    {
+      "path": "review/scanner-catalog-match.png",
+      "bytes": 36933,
+      "sha256": "1085cd3c08f8d00d3d1bcf8f577092082286b44452f597c986290bee5ba94020"
+    },
+    {
+      "path": "review/scanner-editable-flow.png",
+      "bytes": 461721,
+      "sha256": "424fcbe895ecd06b4d8afd0fc99ba3c778d955c85b3a0b05fcdb18584c28a391"
+    },
+    {
+      "path": "review/sellkit-local.png",
+      "bytes": 290121,
+      "sha256": "d99747103c1fc6fe3a7aead610de145d791ae844b51582cc44284190bc0bcbf7"
+    },
+    {
+      "path": "review/sellkit-visible.png",
+      "bytes": 186210,
+      "sha256": "ac603e5daea80a45bd657cac4a21c13996b628a5819da0efd88574907d29514b"
+    },
+    {
+      "path": "review/test-back.jpg",
+      "bytes": 41060,
+      "sha256": "33a08f0f7f0adbf14ea274c7fe9877a40dcc85c3ca77061f4b4a134d8795ebc0"
+    },
+    {
+      "path": "review/test-front.jpg",
+      "bytes": 41265,
+      "sha256": "a1c6b7ba786848b59aa2e4d4b06be3415f0b683d7146b49b5a0e6975c3ff6905"
+    },
+    {
+      "path": "review/two-photo-grading-lab.png",
+      "bytes": 35385,
+      "sha256": "bd6080f9cde99a964213d58697d87a3b61da9341d851d655cd041448fa76af5a"
+    },
+    {
+      "path": "run-cardcortex.ps1",
+      "bytes": 192,
+      "sha256": "d0a15551f7cbe8c5c67b47e0188c0547cb7d7a626089339755af3922e6549b0c"
+    },
+    {
+      "path": "scanner.html",
+      "bytes": 3662,
+      "sha256": "6fdf49cad0fb20769358df132193b6f72abb542573d90fca1f903dd1eefdc786"
+    },
+    {
+      "path": "scripts/github-publish-helper.cjs",
+      "bytes": 4562,
+      "sha256": "d8344571955a53aae5a06f9178d6ca6b184eb620c80d1097b39bd3699634221d"
+    },
+    {
+      "path": "scripts/live-delta-report.cjs",
+      "bytes": 2958,
+      "sha256": "6ad509a6770783335fad0bb4c3ff5e918fe6cf102ef634cf3cb65ff3e8413f72"
+    },
+    {
+      "path": "scripts/supabase-admin.cjs",
+      "bytes": 3493,
+      "sha256": "e52bc83a7ca821d1589aeb580028fcd1e1c4a085ecf062d261be123f6a3ad106"
+    },
+    {
+      "path": "scripts/verify-publish.cjs",
+      "bytes": 5139,
+      "sha256": "22bf44d71c1446d3fd408d863cb9ef88895c45019194c0e02c6d7a636a274cf8"
+    },
+    {
+      "path": "scripts/wait-live-publish.cjs",
+      "bytes": 1056,
+      "sha256": "2bc7e86968651bba08da31931f7df57dba5d77bafb9f18c010a94c063b51e90a"
+    },
+    {
+      "path": "scripts/write-upload-manifest.cjs",
+      "bytes": 1406,
+      "sha256": "57a02d0bc84a8d3587f525ac100627c04fb91aa20f086e084a576fdf0ce3d7b5"
+    },
+    {
+      "path": "sell/index.html",
+      "bytes": 351,
+      "sha256": "9d8d5762754cf2174d73ed09bb7331c8beaf8a23a748d8db492f68fcc684b40a"
+    },
+    {
+      "path": "static-server.cjs",
+      "bytes": 1642,
+      "sha256": "d5457437aa7c7d280406d60e8170890aaa7940540c94ec7388f13ea4410c8fdd"
+    },
+    {
+      "path": "STRIPE-LAUNCH-CHECKLIST.md",
+      "bytes": 2194,
+      "sha256": "051abc293ab80814c8fb8e3c7220a2238137ed975554dbfd5c1d6103e80abcf4"
+    },
+    {
+      "path": "STRIPE-SUPABASE-WEBHOOK-SETUP.md",
+      "bytes": 4087,
+      "sha256": "910cc5a892ab6f815700a24826121c286d4cdff7a90a09a11e6cbc2e0d6afecc"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 82509,
+      "sha256": "4c124da34df25dfe2cf5063710470feb1d45c0d1727a426db76549977a129cf9"
+    },
+    {
+      "path": "SUPABASE-BILLING-SCHEMA.sql",
+      "bytes": 4294,
+      "sha256": "ec474dad651b398820dac5b1168bfc61c3830bdf4faf43cdebd5d93722b7cfff"
+    },
+    {
+      "path": "SUPABASE-CATALOG-SOURCES-REPAIR.sql",
+      "bytes": 3705,
+      "sha256": "7fad23905a9e178e8965818d557715abb35d5fec0c06836be8c82568cd74dfa7"
+    },
+    {
+      "path": "supabase-client.js",
+      "bytes": 5332,
+      "sha256": "4b30f9fdaefeef0bd267a5746e759ac69693ca5ce02793d3df3ab39cf4e39f78"
+    },
+    {
+      "path": "supabase-config.js",
+      "bytes": 158,
+      "sha256": "c2f9a7336d656eb3bd89277912557d19d64f382e8f8ddd7871e838522a23a57a"
+    },
+    {
+      "path": "SUPABASE-DAILY-SYNC-CRON.sql",
+      "bytes": 1160,
+      "sha256": "88b4561ce31e53a54c503065f6c21780567e85c616859d3ad07887537d297b91"
+    },
+    {
+      "path": "SUPABASE-EDGE-FUNCTION-DEPLOY.md",
+      "bytes": 1522,
+      "sha256": "a5814bff9fd1d06c48e72fa316d0a641fb15c3d7dbce403eb4785f4242dbe319"
+    },
+    {
+      "path": "SUPABASE-INTELLIGENCE-SCHEMA.sql",
+      "bytes": 7019,
+      "sha256": "2375e0ce15403b450891b5d006be7fd17c55c13c3e36f26bb8cea54469716aab"
+    },
+    {
+      "path": "SUPABASE-SCHEMA.sql",
+      "bytes": 2695,
+      "sha256": "b9cf85bee25d0df26564069792b8b7467d2c1c0f4cba43585fb5372034d67e1e"
+    },
+    {
+      "path": "supabase/config.toml",
+      "bytes": 136,
+      "sha256": "1bfe0fa172c7e9b7d382b210231172cdffc57169bdde9a46300a3d16c128c2bd"
+    },
+    {
+      "path": "supabase/functions/stripe-webhook/index.ts",
+      "bytes": 10863,
+      "sha256": "351f284e9f4a1dfcc90ec970fcacb205c465ad9cb2d626b70b2842fc453d7362"
+    },
+    {
+      "path": "supabase/functions/sync-pokemon-catalog/index.ts",
+      "bytes": 5617,
+      "sha256": "540d63a7b836d0fc4fd432c01f0e33a2b81c17f16386ff5d6b671f8442e8e74c"
+    },
+    {
+      "path": "sw.js",
+      "bytes": 1403,
+      "sha256": "2f467d4a1aaf7139202ef9f3e848aa07a0ec2a7943c9a4d0d00393e7edb23f1e"
+    },
+    {
+      "path": "terms.html",
+      "bytes": 2957,
+      "sha256": "dcd958e6ff17153c4e1c1da52f6e44d1263255821aa1c8e5db4132611b8348d0"
+    },
+    {
+      "path": "upgrade.html",
+      "bytes": 5724,
+      "sha256": "8357541413a246430a0f69e67477c9ced5b310034fbaf640149b5c81957798c0"
+    },
+    {
+      "path": "values/index.html",
+      "bytes": 343,
+      "sha256": "d17de9d4f816796e87e40b7e833857b0a480a925108a6cbd0daa1f15e974740c"
+    },
+    {
+      "path": "vault.html",
+      "bytes": 5082,
+      "sha256": "741186a70c890e2c2fa3ca85f4cb0a11bc1dba56f0aeab85987bda4bf11e0687"
+    },
+    {
+      "path": "vercel.json",
+      "bytes": 1010,
+      "sha256": "0879518d7864f2e47211c80b4a0f920b54509856977e5adb8071030309ff3a05"
+    }
+  ]
+}

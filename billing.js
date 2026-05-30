@@ -4,6 +4,8 @@
   const USAGE_KEY = "cardcortex-monthly-usage";
   const STRIPE_LINK_KEY = "cardcortex-stripe-payment-links";
   const CURRENT_MONTH = new Date().toISOString().slice(0, 7);
+  let remoteEntitlement = null;
+  let remoteUsage = null;
 
   const CHECKOUT_LINKS = {
     collector: {
@@ -134,10 +136,23 @@
   }
 
   function getPlan(planId) {
-    return plans.find((plan) => plan.id === planId) || plans[0];
+    const plan = plans.find((item) => item.id === planId) || plans[0];
+    if (remoteEntitlement && remoteEntitlement.plan_id === plan.id) {
+      return {
+        ...plan,
+        cardLimit: normalizeLimit(remoteEntitlement.card_limit, plan.cardLimit),
+        scanLimit: normalizeLimit(remoteEntitlement.scan_limit, plan.scanLimit),
+        gradeLimit: normalizeLimit(remoteEntitlement.grade_limit, plan.gradeLimit) + Number(remoteEntitlement.grade_credit_balance || 0),
+        sellKits: normalizeLimit(remoteEntitlement.sell_kit_limit, plan.sellKits),
+      };
+    }
+    return plan;
   }
 
   function getActivePlanId() {
+    if (remoteEntitlement?.plan_id && ["active", "trialing", "paid"].includes(String(remoteEntitlement.billing_status || "").toLowerCase())) {
+      return remoteEntitlement.plan_id;
+    }
     const stored = window.localStorage?.getItem(PLAN_KEY);
     return plans.some((plan) => plan.id === stored) ? stored : "free";
   }
@@ -223,6 +238,14 @@
   }
 
   function getUsageStore() {
+    if (remoteUsage?.month === CURRENT_MONTH) {
+      return {
+        month: CURRENT_MONTH,
+        scans: Number(remoteUsage.scans_used || 0),
+        grades: Number(remoteUsage.grades_used || 0),
+        sellKits: Number(remoteUsage.sell_kits_used || 0),
+      };
+    }
     const usage = readJson(USAGE_KEY, {});
     if (usage.month !== CURRENT_MONTH) return { month: CURRENT_MONTH, scans: 0, grades: 0, sellKits: 0 };
     return { month: CURRENT_MONTH, scans: 0, grades: 0, sellKits: 0, ...usage };
@@ -239,6 +262,21 @@
     const usage = { month: CURRENT_MONTH, scans: 0, grades: 0, sellKits: 0 };
     writeJson(USAGE_KEY, usage);
     return usage;
+  }
+
+  function setRemoteEntitlement(entitlement) {
+    remoteEntitlement = entitlement || null;
+    if (remoteEntitlement?.plan_id) setActivePlan(remoteEntitlement.plan_id);
+  }
+
+  function setRemoteUsage(usage) {
+    remoteUsage = usage || null;
+  }
+
+  function normalizeLimit(value, fallback) {
+    const number = Number(value);
+    if (!Number.isFinite(number) || number <= 0) return fallback;
+    return number >= 2147483647 ? Infinity : number;
   }
 
   function remaining(limit, used) {
@@ -314,5 +352,7 @@
     canUse,
     recordUsage,
     resetUsage,
+    setRemoteEntitlement,
+    setRemoteUsage,
   };
 })();

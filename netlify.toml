@@ -19,6 +19,16 @@
   status = 200
 
 [[redirects]]
+  from = "/sources"
+  to = "/catalog-sources.html"
+  status = 200
+
+[[redirects]]
+  from = "/catalog-sources"
+  to = "/catalog-sources.html"
+  status = 200
+
+[[redirects]]
   from = "/values"
   to = "/pricing.html"
   status = 200
@@ -36,4 +46,14 @@
 [[redirects]]
   from = "/assistant"
   to = "/assistant.html"
+  status = 200
+
+[[redirects]]
+  from = "/account"
+  to = "/auth.html"
+  status = 200
+
+[[redirects]]
+  from = "/backend-status"
+  to = "/backend-status.html"
   status = 200

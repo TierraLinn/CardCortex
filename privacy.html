@@ -17,7 +17,7 @@
       <header class="topbar">
         <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
-          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a>
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./catalog-sources.html">Sources</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a>
         </nav>
         <a class="nav-cta" href="./index.html">Home</a>
       </header>
@@ -25,25 +25,25 @@
         <section class="page-heading">
           <div>
             <h1>Privacy notice</h1>
-            <p>Plain-language launch draft for the CardCortex prototype.</p>
+            <p>Plain-language launch draft for the CardCortex multi-user app.</p>
           </div>
         </section>
         <section class="legal-copy">
-          <h2>Prototype data</h2>
-          <p>This local prototype uses sample card data and browser-based demo interactions. It does not currently send your card scans, collection records, or chat messages to a production backend.</p>
+          <h2>Account data</h2>
+          <p>CardCortex uses Supabase Auth, per-user database rows, and Supabase Storage for signed-in vault records and card images. Signed-out visitors may see sample card data as a preview, but signed-in accounts show only their own saved collection.</p>
           <h2>Camera and uploads</h2>
-          <p>The scanner page may ask for camera permission in your browser. In this prototype, camera and upload activity is used only to demonstrate the scanning flow on your device.</p>
-          <h2>Future account data</h2>
-          <p>A production version may store account details, card photos, collection records, valuation history, grading reports, and selling preferences. Those features should include account controls, deletion options, and secure storage before public launch.</p>
+          <p>The scanner page may ask for camera permission in your browser. Camera and upload activity is processed in the browser first, then saved to your Supabase vault only when you are signed in and choose to save it.</p>
+          <h2>Payments and usage</h2>
+          <p>Paid plan status and monthly usage counters are stored in Supabase. Stripe checkout and webhook events update entitlements for the signed-in user.</p>
           <h2>Contact</h2>
           <p>Add your official support email before launch.</p>
         </section>
       </main>
     </div>
     <script src="./data.js"></script>
-    <script src="./billing.js?v=stripe7"></script>
+    <script src="./billing.js?v=stripe8"></script>
     <script type="module" src="./brand3d.js?v=cortex5"></script>
     <script type="module" src="./page3d.js?v=cortex5"></script>
-    <script src="./app.js?v=cortex5"></script>
+    <script src="./app.js?v=cortex8"></script>
   </body>
 </html>

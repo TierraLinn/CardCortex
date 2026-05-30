@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Catalog Sources | CardCortex</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#050713" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardCortex" />
+    <link rel="stylesheet" href="./styles.css?v=cortex5" />
+  </head>
+  <body data-page="catalog-sources">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./catalog-sources.html">Sources</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a><a href="./auth.html">Account</a>
+        </nav>
+        <a class="nav-cta" href="./scanner.html">Scan a card</a>
+      </header>
+      <main class="app-page">
+        <section class="page-heading">
+          <div>
+            <h1>Catalog source coverage</h1>
+            <p>CardCortex expands card recognition by connecting many source catalogs, not by pretending one database owns every trading card ever printed.</p>
+          </div>
+          <div class="value-tile">
+            <small>Coverage model</small>
+            <strong>Multi-source</strong>
+            <span id="sourceCoverageStatus">Checking live sources...</span>
+          </div>
+        </section>
+
+        <section class="stat-grid" id="catalogSourceGrid"></section>
+
+        <section class="legal-copy">
+          <h2>PriceCharting connector</h2>
+          <p>PriceCharting requires a paid API token. Add it here for local testing so CardCortex can search PriceCharting products from scanner OCR text. For a public production launch, move this token into a private backend function instead of shipping it in browser storage.</p>
+          <form id="priceChartingTokenForm" class="catalog-match-search">
+            <input id="priceChartingTokenInput" type="password" autocomplete="off" placeholder="Paste PriceCharting API token" />
+            <button class="primary-button" type="submit">Save token</button>
+            <button id="clearPriceChartingTokenButton" class="secondary-button" type="button">Clear token</button>
+          </form>
+          <p id="priceChartingTokenStatus" role="status" aria-live="polite">Checking connector token...</p>
+        </section>
+
+        <section class="legal-copy">
+          <h2>TCGplayer category map</h2>
+          <p>TCGCSV exposes TCGplayer category and product feeds that can be imported into the CardCortex catalog over time. This is the broad expansion path for many trading card games.</p>
+          <div class="catalog-match-search">
+            <input id="sourceFilterInput" type="search" placeholder="Filter categories, for example Pokemon, Yu-Gi-Oh, sports, Magic" />
+            <button id="refreshSourcesButton" class="secondary-button" type="button">Refresh sources</button>
+          </div>
+          <div id="tcgCategoryList" class="catalog-match-results">
+            <div class="empty-state">Loading category coverage...</div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./supabase-client.js?v=multiuser2"></script>
+    <script type="module" src="./brand3d.js?v=cortex5"></script>
+    <script type="module" src="./page3d.js?v=cortex5"></script>
+    <script src="./catalog-sources.js?v=coverage3"></script>
+  </body>
+</html>

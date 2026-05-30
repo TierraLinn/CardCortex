@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Backend Status | CardCortex</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./app-icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#050713" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardCortex" />
+    <link rel="stylesheet" href="./styles.css?v=cortex5" />
+  </head>
+  <body data-page="auth">
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./catalog-sources.html">Sources</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a><a href="./auth.html">Account</a>
+        </nav>
+        <a class="nav-cta" href="./auth.html">Account</a>
+      </header>
+      <main class="app-page auth-page">
+        <section class="page-heading">
+          <div>
+            <h1>Production backend status</h1>
+            <p>Check whether the live Supabase project is ready for multiple users, private vault records, card images, paid entitlements, and usage counters.</p>
+          </div>
+          <div class="value-tile">
+            <small>Supabase project</small>
+            <strong id="backendProjectHost">Checking</strong>
+            <span id="backendOverallStatus">Preparing checks...</span>
+          </div>
+        </section>
+
+        <section id="backendStatusGrid" class="stat-grid"></section>
+
+        <section class="auth-grid">
+          <article class="auth-card">
+            <h2>One-click copy</h2>
+            <p>Copies the complete database setup in the correct order: private vault, intelligence tables, billing, and usage counters.</p>
+            <button class="primary-button" type="button" id="copyAllSqlButton">Copy full setup SQL</button>
+          </article>
+          <article class="auth-card">
+            <h2>Need separate files?</h2>
+            <p>Use these only if Supabase reports an error and you want to run one section at a time.</p>
+            <button class="primary-button" type="button" data-copy-sql="SUPABASE-SCHEMA.sql">Copy main SQL</button>
+            <button class="secondary-button" type="button" data-copy-sql="SUPABASE-INTELLIGENCE-SCHEMA.sql">Copy intelligence SQL</button>
+            <button class="secondary-button" type="button" data-copy-sql="SUPABASE-BILLING-SCHEMA.sql">Copy billing SQL</button>
+          </article>
+        </section>
+
+        <section class="legal-copy">
+          <h2>Exact setup steps</h2>
+          <p>Click <strong>Copy full setup SQL</strong>, then open the Supabase SQL Editor for project <strong>niqmgpgzffwujvacpgzy</strong>. Paste the copied text into the editor and click <strong>Run</strong>. After it finishes, return here and click <strong>Recheck backend</strong>.</p>
+          <p>If Supabase asks you to sign in, use the account that owns this project. I cannot do that part without your login.</p>
+          <p>
+            <a class="primary-button" href="https://supabase.com/dashboard/project/niqmgpgzffwujvacpgzy/sql/new" target="_blank" rel="noopener">Open Supabase SQL Editor</a>
+            <button id="recheckBackendButton" class="secondary-button" type="button">Recheck backend</button>
+          </p>
+          <p id="backendCopyStatus" role="status" aria-live="polite">No SQL copied yet.</p>
+        </section>
+      </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+    <script src="./backend-status.js?v=production8"></script>
+  </body>
+</html>

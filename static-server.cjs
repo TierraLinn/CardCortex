@@ -13,10 +13,27 @@ const types = {
   ".webp": "image/webp",
   ".svg": "image/svg+xml",
 };
+const cleanRoutes = {
+  "/vault": "/vault.html",
+  "/scanner": "/scanner.html",
+  "/sources": "/catalog-sources.html",
+  "/catalog-sources": "/catalog-sources.html",
+  "/values": "/pricing.html",
+  "/pricing": "/pricing.html",
+  "/grading": "/grading.html",
+  "/sell": "/marketplace.html",
+  "/marketplace": "/marketplace.html",
+  "/assistant": "/assistant.html",
+  "/account": "/auth.html",
+  "/auth": "/auth.html",
+  "/backend-status": "/backend-status.html",
+  "/privacy": "/privacy.html",
+  "/terms": "/terms.html",
+};
 
 http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
-  const route = url.pathname === "/" ? "/index.html" : url.pathname;
+  const route = url.pathname === "/" ? "/index.html" : cleanRoutes[url.pathname] || url.pathname;
   const filePath = path.normalize(path.join(root, decodeURIComponent(route)));
   if (!filePath.startsWith(root)) {
     res.writeHead(403);

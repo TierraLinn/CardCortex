@@ -12,8 +12,22 @@
       const { data } = await client.auth.getUser();
       return data.user || null;
     },
+    authRedirectUrl() {
+      return `${window.location.origin}${window.location.pathname.includes("auth.html") ? window.location.pathname : "/auth.html"}`;
+    },
     async signUp(email, password) {
-      return client.auth.signUp({ email, password });
+      return client.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: this.authRedirectUrl() },
+      });
+    },
+    async resendConfirmation(email) {
+      return client.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: this.authRedirectUrl() },
+      });
     },
     async signIn(email, password) {
       return client.auth.signInWithPassword({ email, password });
@@ -102,6 +116,42 @@
         .maybeSingle();
       if (error) throw error;
       return data || null;
+    },
+    async getUsage(month = new Date().toISOString().slice(0, 7)) {
+      const user = await this.getUser();
+      if (!user) return null;
+      const { data, error } = await client
+        .from("usage_counters")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("month", month)
+        .maybeSingle();
+      if (error) throw error;
+      return data || { user_id: user.id, month, scans_used: 0, grades_used: 0, sell_kits_used: 0 };
+    },
+    async recordUsage(kind, amount = 1, month = new Date().toISOString().slice(0, 7)) {
+      const user = await this.getUser();
+      if (!user) throw new Error("Sign in before recording usage.");
+      const allowed = new Set(["scans", "grades", "sellKits"]);
+      if (!allowed.has(kind)) throw new Error("Unknown usage counter.");
+      const column = kind === "sellKits" ? "sell_kits_used" : `${kind}_used`;
+      const current = await this.getUsage(month);
+      const next = {
+        user_id: user.id,
+        month,
+        scans_used: Number(current?.scans_used || 0),
+        grades_used: Number(current?.grades_used || 0),
+        sell_kits_used: Number(current?.sell_kits_used || 0),
+        updated_at: new Date().toISOString(),
+      };
+      next[column] = Number(next[column] || 0) + Number(amount || 1);
+      const { data, error } = await client
+        .from("usage_counters")
+        .upsert(next, { onConflict: "user_id,month" })
+        .select("*")
+        .single();
+      if (error) throw error;
+      return data;
     },
   };
 })();

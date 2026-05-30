@@ -51,11 +51,12 @@ GitHub will publish a URL like:
 
 - Static landing page
 - Vault UI
-- Scanner demo UI
-- AI grading demo UI
-- Value dashboard demo UI
+- OCR scanner with Supabase catalog, Pokemon, Scryfall, and optional PriceCharting lookup
+- AI-assisted grading workspace
+- Value dashboard with live source connectors where configured
 - Marketplace route planner UI
-- AI advisor demo UI
+- AI advisor workspace
+- Supabase-backed accounts and private vault storage
 
 ## What may need a backend later
 

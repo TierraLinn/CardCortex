@@ -2,9 +2,9 @@
 
 ## Current launch status
 
-CardCortex is ready to publish as a static prototype. It includes the landing page, vault, scanner demo, valuation dashboard, AI grading demo, marketplace route planner, AI advisor page, privacy page, and terms page.
+CardCortex is ready to publish as a static multi-user web app backed by Supabase Auth, Supabase database rows, Supabase Storage, Stripe Payment Links, and a Supabase Stripe webhook.
 
-The current scanner, pricing, AI grading, and assistant flows are demo/simulated. Public copy should not claim live marketplace pricing, official card grading, or real AI certification until those backends are connected and tested.
+Scanner, pricing, AI grading, and assistant flows are decision-support tools. Public copy should not claim live marketplace sale guarantees, official PSA/BGS/CGC grading, or official marketplace posting until those partner APIs are approved and tested.
 
 ## Free public deployment options
 
@@ -25,10 +25,13 @@ Use Netlify Drop for the fastest no-cost public preview:
    - `/`
    - `/vault`
    - `/scanner`
+   - `/sources`
    - `/values`
    - `/grading`
    - `/sell`
    - `/assistant`
+   - `/account`
+   - `/backend-status`
    - `/privacy.html`
    - `/terms.html`
 
@@ -44,10 +47,10 @@ Use GitHub plus Vercel or Netlify for a cleaner launch:
 
 ## Before public announcement
 
-- Replace simulated scanner copy with a clear beta label.
-- Add real account creation or waitlist capture.
+- Confirm OCR scanner copy remains clear about AI-assisted matches and manual review.
+- Test real account creation with the deployed site URL in Supabase Auth redirects.
 - Add a support email.
-- Add screenshots or a short demo video.
+- Add screenshots or a short product walkthrough video.
 - Decide whether the first public version is a landing beta, closed alpha, or live usable app.
 - Confirm marketplace/API permission requirements before connecting eBay, TCGPlayer, Cardmarket, or other pricing sources.
 - Confirm legal language with a qualified professional before accepting payments, user uploads, official grading claims, or seller payouts.
@@ -56,7 +59,7 @@ Use GitHub plus Vercel or Netlify for a cleaner launch:
 
 1. User accounts and collection storage.
 2. Image upload storage for front/back card photos.
-3. Vision AI card identification.
+3. OCR-assisted card identification with live source matching.
 4. Price aggregation from approved APIs and sold-comps sources.
 5. AI condition pre-grade report with confidence scoring.
 6. Marketplace listing generator.

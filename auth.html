@@ -17,7 +17,7 @@
       <header class="topbar">
         <a class="brand" href="./index.html"><span class="brand-glyph" aria-hidden="true"></span><span>CardCortex</span></a>
         <nav aria-label="Primary navigation">
-          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a>
+          <a href="./vault.html">Vault</a><a href="./scanner.html">Scanner</a><a href="./catalog-sources.html">Sources</a><a href="./pricing.html">Values</a><a href="./reports.html">Reports</a><a href="./grading.html">AI grading</a><a href="./marketplace.html">Sell</a><a href="./assistant.html">Advisor</a><a href="./upgrade.html">Upgrade</a>
         </nav>
         <a class="nav-cta" href="./scanner.html">Scan a card</a>
       </header>
@@ -42,8 +42,10 @@
             <div class="auth-actions">
               <button class="primary-button" type="submit" data-mode="signin">Sign in</button>
               <button class="secondary-button" type="button" id="signUpButton">Create account</button>
+              <button class="secondary-button" type="button" id="resendConfirmationButton">Resend confirmation email</button>
             </div>
             <p id="authStatus" role="status" aria-live="polite">Waiting for sign in.</p>
+            <p class="fine-print">Confirmation emails should open this CardCortex account page. If a link still opens a broken page, add this app URL in Supabase Auth redirect settings.</p>
           </form>
           <article class="auth-card">
             <h2>Current session</h2>
@@ -54,16 +56,17 @@
             <h2>Subscription status</h2>
             <div id="accountPlanSummary" class="account-plan-summary"></div>
             <a class="primary-button" href="./upgrade.html">View upgrade plans</a>
+            <a class="secondary-button" href="./backend-status.html">Check production backend</a>
           </article>
         </section>
       </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js"></script>
-    <script src="./supabase-client.js"></script>
-    <script src="./billing.js?v=stripe7"></script>
+    <script src="./supabase-client.js?v=multiuser2"></script>
+    <script src="./billing.js?v=stripe8"></script>
     <script type="module" src="./brand3d.js?v=cortex5"></script>
     <script type="module" src="./page3d.js?v=cortex5"></script>
-    <script src="./auth.js?v=entitlements1"></script>
+    <script src="./auth.js?v=entitlements3"></script>
   </body>
 </html>

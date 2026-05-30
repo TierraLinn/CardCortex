@@ -8,6 +8,7 @@ let lastScanImageUrl = "";
 let lastScanSearchHint = "";
 let lastScanAnalysis = null;
 let lastScanDataUrl = "";
+let lastScanOcrText = "";
 let activeGradeResult = null;
 const page = document.body.dataset.page;
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -15,6 +16,7 @@ const CERTIFICATE_STORE_KEY = "cardcortex-certificates";
 const storage = createStorage();
 const billing = window.CardCortexBilling || null;
 const supabaseApi = window.CardCortexSupabase || null;
+let signedInVaultLoaded = false;
 const motionPointer = {
   x: typeof window !== "undefined" ? window.innerWidth * 0.68 : 0,
   y: typeof window !== "undefined" ? window.innerHeight * 0.22 : 0,
@@ -289,6 +291,11 @@ async function initEntitlementSync() {
   try {
     const entitlement = await supabaseApi.getEntitlement();
     if (!entitlement?.plan_id || entitlement.billing_status === "inactive") return;
+    billing.setRemoteEntitlement?.(entitlement);
+    if (supabaseApi.getUsage) {
+      const usage = await supabaseApi.getUsage();
+      billing.setRemoteUsage?.(usage);
+    }
     const allowedStatuses = ["active", "trialing", "paid"];
     if (allowedStatuses.includes(String(entitlement.billing_status || "").toLowerCase())) {
       billing.setActivePlan(entitlement.plan_id);
@@ -358,6 +365,22 @@ function blockForPlan(kind, status, message) {
     else status.textContent = text;
   }
   return true;
+}
+
+async function recordMeteredUsage(kind) {
+  const usage = billing?.recordUsage(kind);
+  if (supabaseApi?.recordUsage) {
+    try {
+      const user = await supabaseApi.getUser();
+      if (user) {
+        const remoteUsage = await supabaseApi.recordUsage(kind);
+        billing?.setRemoteUsage?.(remoteUsage);
+      }
+    } catch (error) {
+      console.warn("Could not sync usage counter:", error);
+    }
+  }
+  return usage;
 }
 
 function renderHomeCommandCenter() {
@@ -558,19 +581,27 @@ async function loadSupabaseCards(statusEl) {
   if (!api) return;
   const user = await api.getUser();
   if (!user) {
-    if (statusEl) statusEl.textContent = "Sign in to save cards to Supabase. Demo cards are shown until your account has saved cards.";
+    signedInVaultLoaded = false;
+    cards = [...seedCards];
+    updateStoredCardConstellation();
+    if (statusEl) statusEl.textContent = "Sign in to save cards to your private Supabase vault. Sample cards are shown only as a signed-out preview.";
     return;
   }
   try {
     const rows = await api.listCards();
+    signedInVaultLoaded = true;
     if (rows.length) {
       cards = rows.map(dbCardToCard);
       updateStoredCardConstellation();
       if (statusEl) statusEl.textContent = `Signed in as ${user.email}. Showing ${rows.length} saved card${rows.length === 1 ? "" : "s"}.`;
     } else {
-      if (statusEl) statusEl.textContent = `Signed in as ${user.email}. Your real vault is empty, so demo cards are still shown.`;
+      cards = [];
+      activeVaultId = "";
+      updateStoredCardConstellation();
+      if (statusEl) statusEl.textContent = `Signed in as ${user.email}. Your real vault is empty. Add or scan a card to start your private collection.`;
     }
   } catch (error) {
+    signedInVaultLoaded = false;
     if (statusEl) statusEl.textContent = `Supabase setup needed: ${error.message}`;
   }
 }
@@ -833,7 +864,7 @@ function initScanner() {
       lastScanDataUrl = "";
       updateScanTelemetry();
     }
-    billing?.recordUsage("scans");
+    void recordMeteredUsage("scans");
     renderPlanGate("#scannerPlanGate", "scanner");
     simulateScan(result, status);
   });
@@ -843,10 +874,10 @@ function initScanner() {
       event.target.value = "";
       return;
     }
-    billing?.recordUsage("scans");
+    void recordMeteredUsage("scans");
     renderPlanGate("#scannerPlanGate", "scanner");
     const file = event.target.files[0];
-    lastScanSearchHint = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+    lastScanSearchHint = filenameSearchHint(file.name);
     const image = new Image();
     image.onload = async () => {
       canvas.width = image.width;
@@ -921,17 +952,20 @@ async function simulateScan(result, status, forceRandom = false) {
   const card = chooseScanCandidate(forceRandom);
   lastScanCard = { ...card };
   const confidenceBoost = lastScanAnalysis ? Math.round(lastScanAnalysis.confidence) : card.confidence;
-  status.textContent = `Scanner matched a best candidate: ${card.name}. Review and correct it before saving.`;
+  status.textContent = card.needsReview
+    ? "Scanner needs a better text clue. Type the card name or set, then click Find real matches."
+    : `Scanner matched a best candidate: ${card.name}. Review and correct it before saving.`;
   result.innerHTML = `
     <article class="scan-review">
       <div class="scan-review-card" style="--card-accent:${card.color}">
         <div class="mini-card holo-card"><span>${card.category}</span><strong>${card.name.slice(0, 2).toUpperCase()}</strong></div>
         <div>
           <h2>Review scanner match</h2>
-          <p>Correct anything that is wrong. CardCortex saves your reviewed version, not the raw match.</p>
+          <p>${card.needsReview ? "No confident identity was found from the image. Search or type the exact card before saving." : "Correct anything that is wrong. CardCortex saves your reviewed version, not the raw match."}</p>
         </div>
       </div>
       ${scanTelemetryCard()}
+      ${scanOcrCard()}
       <form id="scanReviewForm" class="scan-review-form">
         <label>Card name<input id="scanName" type="text" value="${escapeAttribute(card.name)}" required /></label>
         <label>Category<input id="scanCategory" type="text" value="${escapeAttribute(card.category)}" required /></label>
@@ -947,7 +981,7 @@ async function simulateScan(result, status, forceRandom = false) {
       <div class="scan-review-actions">
         <button id="saveScanButton" class="primary-button save-scan-button" type="button">Save reviewed card to vault</button>
         <button id="sendToGradeButton" class="secondary-button" type="button">Send scan to grading</button>
-        <button id="newGuessButton" class="secondary-button" type="button">Try another AI guess</button>
+        <button id="newGuessButton" class="secondary-button" type="button">Clear match and search manually</button>
       </div>
       <section class="catalog-match-panel">
         <div>
@@ -964,13 +998,23 @@ async function simulateScan(result, status, forceRandom = false) {
       </section>
     </article>`;
 
-  document.querySelector("#newGuessButton")?.addEventListener("click", () => simulateScan(result, status, true));
+  document.querySelector("#newGuessButton")?.addEventListener("click", () => {
+    lastScanSearchHint = "";
+    simulateScan(result, status, false);
+  });
   await loadScanCatalogMatches(lastScanSearchHint || card.name, status);
 }
 
 async function prepareScanAnalysis(file, status) {
   try {
     const analysis = await analyzeCardImage(file);
+    lastScanOcrText = "";
+    if (status) status.textContent = "Reading card text from image...";
+    const ocrText = await extractCardText(file);
+    lastScanOcrText = ocrText;
+    const textHint = deriveCardSearchHint(ocrText);
+    if (textHint) lastScanSearchHint = textHint;
+    else if (!lastScanSearchHint) lastScanSearchHint = filenameSearchHint(file.name);
     const borderConfidence = scanBorderConfidence(analysis.box, analysis.width, analysis.height);
     lastScanAnalysis = {
       ...analysis,
@@ -978,7 +1022,10 @@ async function prepareScanAnalysis(file, status) {
       confidence: clamp(analysis.quality * 0.54 + borderConfidence * 0.3 + analysis.centering.score * 0.16, 35, 98),
     };
     updateScanTelemetry();
-    if (status) status.textContent = `Image analyzed: ${Math.round(lastScanAnalysis.confidence)}% scan confidence. Review match candidates before saving.`;
+    if (status) {
+      const hintCopy = lastScanSearchHint ? ` Search hint: ${lastScanSearchHint}.` : " No readable card name found yet.";
+      status.textContent = `Image analyzed: ${Math.round(lastScanAnalysis.confidence)}% scan confidence.${hintCopy}`;
+    }
   } catch (error) {
     lastScanAnalysis = null;
     updateScanTelemetry();
@@ -996,9 +1043,26 @@ function chooseScanCandidate(forceRandom = false) {
       const score = words.reduce((sum, word) => sum + (text.includes(word) ? 1 : 0), 0);
       return { card, score };
     }).sort((a, b) => b.score - a.score);
-    if (scored[0]?.score) return scored[0].card;
+    if (scored[0]?.score >= Math.min(2, hint.split(/\s+/).filter(Boolean).length)) return scored[0].card;
   }
-  return cards[Math.floor(Math.random() * cards.length)];
+  return genericScanReviewCard();
+}
+
+function genericScanReviewCard() {
+  return {
+    id: "uploaded-card-review",
+    name: lastScanSearchHint || "Uploaded card",
+    category: "Trading card",
+    set: "",
+    number: "",
+    rarity: "",
+    rawValue: 0,
+    gradedValue: 0,
+    grade: 0,
+    confidence: lastScanAnalysis ? Math.round(lastScanAnalysis.confidence * 0.45) : 35,
+    color: "#76f7ff",
+    needsReview: true,
+  };
 }
 
 function scanBorderConfidence(box, width, height) {
@@ -1044,29 +1108,90 @@ function scanTelemetryCard() {
     </div>`;
 }
 
+function scanOcrCard() {
+  if (!lastScanOcrText) {
+    return `
+      <div class="ai-panel">
+        <strong>Text read</strong>
+        <p>No readable printed text was found. Use a clear front image and search by name, set, or card number.</p>
+      </div>`;
+  }
+  return `
+    <div class="ai-panel">
+      <strong>Text read</strong>
+      <p>${escapeHtml(lastScanOcrText.split(/\s+/).slice(0, 34).join(" "))}</p>
+    </div>`;
+}
+
+async function extractCardText(file) {
+  if (!window.Tesseract?.recognize) return "";
+  try {
+    const result = await window.Tesseract.recognize(file, "eng", {
+      logger: () => {},
+    });
+    return normalizeWhitespace(result?.data?.text || "").slice(0, 500);
+  } catch (error) {
+    console.warn("Card text extraction skipped:", error);
+    return "";
+  }
+}
+
+function deriveCardSearchHint(text) {
+  const lines = String(text || "")
+    .split(/\n+/)
+    .map((line) => cleanOcrLine(line))
+    .filter((line) => line.length >= 3);
+  const setNumber = lines.join(" ").match(/\b[A-Z]{1,4}[-\s]?\d{1,4}\b|\b\d{1,4}\s*\/\s*\d{1,4}\b/i)?.[0] || "";
+  const nameLine = lines.find((line) => isLikelyCardNameLine(line)) || "";
+  const parts = [nameLine, setNumber].filter(Boolean);
+  return normalizeWhitespace(parts.join(" ")).slice(0, 80);
+}
+
+function filenameSearchHint(name) {
+  const base = String(name || "").replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+  const cleaned = cleanOcrLine(base);
+  if (!cleaned || /^(image|img|scan|photo|card|upload|screenshot)\s*\d*$/i.test(cleaned)) return "";
+  return cleaned;
+}
+
+function cleanOcrLine(value) {
+  return normalizeWhitespace(String(value || "")
+    .replace(/[^\w\s/'#.-]/g, " ")
+    .replace(/\b(illustrated|copyright|weakness|resistance|retreat|trainer|basic|stage|pokemon|hp)\b/gi, " "));
+}
+
+function isLikelyCardNameLine(line) {
+  const words = line.split(/\s+/).filter(Boolean);
+  if (words.length < 1 || words.length > 6) return false;
+  if (/\b\d{3,}\b/.test(line)) return false;
+  if (/^\d+\/\d+$/.test(line)) return false;
+  if (/\b(damage|attach|energy|opponent|during|turn|card|cards|deck|discard)\b/i.test(line)) return false;
+  return /[a-z]/i.test(line);
+}
+
+function normalizeWhitespace(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
 async function loadScanCatalogMatches(query, status) {
   const api = window.CardCortexSupabase;
   const target = document.querySelector("#scanCatalogMatches");
   const clean = String(query || "").trim();
   if (!target) return;
-  if (!api) {
-    target.innerHTML = `<div class="empty-state">Supabase catalog is not connected yet.</div>`;
-    return;
-  }
   if (!clean) {
     target.innerHTML = `<div class="empty-state">Type a card name or set to search your synced catalog.</div>`;
     return;
   }
   target.innerHTML = `<div class="ai-panel">Searching synced catalog for "${escapeHtml(clean)}"...</div>`;
   try {
-    const rows = await api.searchCatalog(clean);
+    const rows = api?.searchCatalog ? await api.searchCatalog(clean) : [];
     if (!rows.length) {
-      const liveMatches = await searchPokemonTcg(clean);
+      const liveMatches = await searchLiveCardSources(clean);
       if (!liveMatches.length) {
         target.innerHTML = `<div class="empty-state">No catalog or live source matches found. Try the exact card name, set name, or a simpler search.</div>`;
         return;
       }
-      target.innerHTML = liveMatches.slice(0, 5).map(scanPokemonMatchCard).join("");
+      target.innerHTML = liveMatches.slice(0, 6).map(scanLiveMatchCard).join("");
       if (status) status.textContent = `Found ${liveMatches.slice(0, 5).length} live source candidate${liveMatches.length === 1 ? "" : "s"}. Pick one or keep editing manually.`;
       return;
     }
@@ -1077,7 +1202,15 @@ async function loadScanCatalogMatches(query, status) {
     target.innerHTML = matches.map(scanCatalogMatchCard).join("");
     if (status) status.textContent = `Found ${matches.length} synced catalog candidate${matches.length === 1 ? "" : "s"}. Pick one or keep editing manually.`;
   } catch (error) {
-    target.innerHTML = `<div class="empty-state">Catalog matching failed: ${escapeHtml(error.message)}</div>`;
+    try {
+      const liveMatches = await searchLiveCardSources(clean);
+      target.innerHTML = liveMatches.length
+        ? liveMatches.slice(0, 6).map(scanLiveMatchCard).join("")
+        : `<div class="empty-state">Catalog matching failed: ${escapeHtml(error.message)}. Try the exact card name, set name, or number.</div>`;
+      if (status && liveMatches.length) status.textContent = `Supabase catalog had trouble, but ${liveMatches.slice(0, 5).length} live source match${liveMatches.length === 1 ? "" : "es"} were found.`;
+    } catch {
+      target.innerHTML = `<div class="empty-state">Catalog matching failed: ${escapeHtml(error.message)}</div>`;
+    }
   }
 }
 
@@ -1140,6 +1273,78 @@ function scanPokemonMatchCard(card) {
           <span>${bestPrice ? money.format(bestPrice) : "price pending"}</span>
           <span>${priceRows.length} price signal${priceRows.length === 1 ? "" : "s"}</span>
         </div>
+      </div>
+      <button class="primary-button tiny-button" type="button" data-use-catalog-match="${encodeURIComponent(JSON.stringify(payload))}">Use this match</button>
+    </article>
+  `;
+}
+
+function scanLiveMatchCard(match) {
+  if (match.source === "PriceCharting") return scanPriceChartingMatchCard(match.card);
+  if (match.source === "Scryfall") return scanScryfallMatchCard(match.card);
+  return scanPokemonMatchCard(match.card || match);
+}
+
+function scanScryfallMatchCard(card) {
+  const imageUrl = card.image_uris?.small || card.card_faces?.find((face) => face.image_uris?.small)?.image_uris?.small || "";
+  const bestPrice = Number(card.prices?.usd || card.prices?.usd_foil || card.prices?.eur || 0);
+  const payload = {
+    name: card.name,
+    category: "Magic",
+    set: card.set_name || card.set?.toUpperCase() || "",
+    number: card.collector_number || "",
+    rarity: card.rarity || "",
+    rawValue: bestPrice,
+    gradedValue: Math.round(bestPrice * 1.55),
+    confidence: bestPrice ? 90 : 78,
+    imageUrl,
+    source: "Scryfall",
+  };
+  return `
+    <article class="catalog-match-card">
+      <img src="${imageUrl}" alt="${escapeAttribute(card.name)}" />
+      <div>
+        <h3>${escapeHtml(card.name)}</h3>
+        <p>${escapeHtml(card.set_name || "Unknown set")} ${card.collector_number ? `#${escapeHtml(card.collector_number)}` : ""} ${card.rarity ? `&middot; ${escapeHtml(card.rarity)}` : ""}</p>
+        <div class="chip-row">
+          <span>Live source: Scryfall</span>
+          <span>${bestPrice ? money.format(bestPrice) : "price pending"}</span>
+          <span>${escapeHtml(card.released_at || "release unknown")}</span>
+        </div>
+        ${card.scryfall_uri ? `<a class="secondary-button tiny-link" href="${card.scryfall_uri}" target="_blank" rel="noreferrer">Open Scryfall source</a>` : ""}
+      </div>
+      <button class="primary-button tiny-button" type="button" data-use-catalog-match="${encodeURIComponent(JSON.stringify(payload))}">Use this match</button>
+    </article>
+  `;
+}
+
+function scanPriceChartingMatchCard(product) {
+  const rawValue = centsToDollars(product["loose-price"] || product.loosePrice || 0);
+  const gradedValue = centsToDollars(product["manual-only-price"] || product["graded-price"] || product["new-price"] || 0);
+  const payload = {
+    name: product["product-name"] || product.productName || "PriceCharting match",
+    category: product["console-name"] || product.consoleName || product.genre || "Trading card",
+    set: product.genre || "",
+    number: product.id || "",
+    rarity: "",
+    rawValue,
+    gradedValue: gradedValue || Math.round(rawValue * 1.8),
+    confidence: rawValue ? 92 : 80,
+    imageUrl: "",
+    source: "PriceCharting",
+  };
+  const sourceUrl = product["product-url"] || product.url || (product.id ? `https://www.pricecharting.com/game/${product.id}` : "https://www.pricecharting.com/");
+  return `
+    <article class="catalog-match-card">
+      <div>
+        <h3>${escapeHtml(payload.name)}</h3>
+        <p>${escapeHtml(payload.category)} ${product.id ? `&middot; ID ${escapeHtml(product.id)}` : ""}</p>
+        <div class="chip-row">
+          <span>Live source: PriceCharting</span>
+          <span>${rawValue ? `${money.format(rawValue)} ungraded` : "price pending"}</span>
+          <span>${gradedValue ? `${money.format(gradedValue)} graded/reference` : "graded pending"}</span>
+        </div>
+        <a class="secondary-button tiny-link" href="${sourceUrl}" target="_blank" rel="noreferrer">Open PriceCharting source</a>
       </div>
       <button class="primary-button tiny-button" type="button" data-use-catalog-match="${encodeURIComponent(JSON.stringify(payload))}">Use this match</button>
     </article>
@@ -1251,10 +1456,9 @@ function renderUpgradeUsage() {
       </article>
     `).join("")}
     <article class="plan-usage-card plan-usage-action">
-      <small>Billing preview</small>
+      <small>Billing status</small>
       <strong>${escapeHtml(plan.name)}</strong>
-      <span>This page previews limits until Stripe webhooks write real entitlements.</span>
-      <button class="secondary-button tiny-button" type="button" data-reset-usage>Reset demo usage</button>
+      <span>Limits come from Supabase entitlements when signed in; signed-out visitors see local free-plan limits.</span>
     </article>
   `;
 }
@@ -1292,7 +1496,6 @@ function renderUpgradePlans() {
         <button class="primary-button" type="button" data-checkout-plan="${escapeAttribute(plan.id)}">
           ${plan.id === "free" ? "Use free plan" : checkoutReady ? "Start checkout" : "Stripe link needed"}
         </button>
-        ${plan.id === "free" ? "" : `<button class="secondary-button" type="button" data-preview-plan="${escapeAttribute(plan.id)}">Preview ${escapeHtml(plan.name)} limits</button>`}
       </article>
     `;
   }).join("");
@@ -1331,7 +1534,6 @@ function initUpgradeActions() {
   document.body.dataset.upgradeActionsReady = "true";
   document.addEventListener("click", async (event) => {
     const checkout = event.target.closest("[data-checkout-plan]");
-    const preview = event.target.closest("[data-preview-plan]");
     const addon = event.target.closest("[data-checkout-addon]");
     const reset = event.target.closest("[data-reset-usage]");
     const status = document.querySelector("#stripeLinkStatus");
@@ -1339,7 +1541,7 @@ function initUpgradeActions() {
       const planId = checkout.dataset.checkoutPlan;
       if (planId === "free") {
         billing.setActivePlan("free");
-        if (status) status.textContent = "Free plan selected for this browser preview.";
+        if (status) status.textContent = "Free plan selected locally. Sign in to connect this browser to your Supabase entitlement.";
         renderUpgrade();
         return;
       }
@@ -1355,12 +1557,7 @@ function initUpgradeActions() {
         return;
       }
       window.open(tracked.url, "_blank", "noopener");
-      if (status) status.textContent = "Stripe checkout opened in a new tab. A webhook is the next step for real paid entitlements.";
-    }
-    if (preview && billing) {
-      const plan = billing.setActivePlan(preview.dataset.previewPlan);
-      if (status) status.textContent = `${plan.name} limits are previewing locally. Real paid access still needs Stripe checkout plus a webhook.`;
-      renderUpgrade();
+      if (status) status.textContent = "Stripe checkout opened in a new tab. Supabase webhook will attach the paid entitlement to your signed-in vault.";
     }
     if (addon && billing) {
       const addOn = billing.addOns.find((item) => item.id === addon.dataset.checkoutAddon);
@@ -1379,7 +1576,7 @@ function initUpgradeActions() {
     }
     if (reset && billing) {
       billing.resetUsage();
-      if (status) status.textContent = "Demo usage counters reset for this browser.";
+      if (status) status.textContent = "Local signed-out usage counters reset for this browser.";
       renderUpgrade();
     }
   });
@@ -1432,15 +1629,110 @@ function initTcgLookup() {
 }
 
 async function searchPokemonTcg(query) {
-  const params = new URLSearchParams({
-    q: `name:"${query.replace(/"/g, "")}"`,
-    pageSize: "8",
-    orderBy: "-set.releaseDate",
-  });
-  const response = await fetch(`https://api.pokemontcg.io/v2/cards?${params.toString()}`);
-  if (!response.ok) throw new Error(`Source returned ${response.status}`);
+  const clean = normalizeWhitespace(query).replace(/"/g, "");
+  const queries = buildPokemonQueries(clean);
+  for (const q of queries) {
+    const params = new URLSearchParams({ q, pageSize: "8", orderBy: "-set.releaseDate" });
+    const response = await fetch(`https://api.pokemontcg.io/v2/cards?${params.toString()}`);
+    if (!response.ok) continue;
+    const payload = await response.json();
+    if (payload.data?.length) return payload.data;
+  }
+  return [];
+}
+
+async function searchLiveCardSources(query) {
+  const [priceCharting, pokemon, magic] = await Promise.allSettled([
+    searchPriceChartingProducts(query),
+    searchPokemonTcg(query),
+    searchScryfallCards(query),
+  ]);
+  return [
+    ...(priceCharting.status === "fulfilled" ? priceCharting.value.map((card) => ({ source: "PriceCharting", card })) : []),
+    ...(pokemon.status === "fulfilled" ? pokemon.value.map((card) => ({ source: "Pokemon TCG API", card })) : []),
+    ...(magic.status === "fulfilled" ? magic.value.map((card) => ({ source: "Scryfall", card })) : []),
+  ];
+}
+
+async function searchPriceChartingProducts(query) {
+  const token = getPriceChartingToken();
+  const clean = normalizeWhitespace(query).replace(/"/g, "");
+  if (!token || !clean) return [];
+  const params = new URLSearchParams({ t: token, q: clean });
+  const response = await fetch(`https://www.pricecharting.com/api/products?${params.toString()}`);
+  if (!response.ok) return [];
   const payload = await response.json();
-  return payload.data || [];
+  if (payload.status && payload.status !== "success") return [];
+  const products = Array.isArray(payload.products) ? payload.products : [];
+  return products.slice(0, 6);
+}
+
+function getPriceChartingToken() {
+  try {
+    return localStorage.getItem("cardcortex-pricecharting-token") || "";
+  } catch {
+    return "";
+  }
+}
+
+function centsToDollars(value) {
+  const cents = Number(value || 0);
+  return cents > 0 ? Math.round(cents / 100) : 0;
+}
+
+async function searchScryfallCards(query) {
+  const clean = normalizeWhitespace(query).replace(/"/g, "");
+  const queries = buildScryfallQueries(clean);
+  for (const q of queries) {
+    const params = new URLSearchParams({
+      q,
+      unique: "prints",
+      order: "released",
+      dir: "desc",
+      include_extras: "false",
+    });
+    const response = await fetch(`https://api.scryfall.com/cards/search?${params.toString()}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) continue;
+    const payload = await response.json();
+    if (payload.data?.length) return payload.data.slice(0, 8);
+  }
+  return [];
+}
+
+function buildPokemonQueries(query) {
+  const number = query.match(/\b\d{1,4}\s*\/\s*\d{1,4}\b/)?.[0]?.replace(/\s/g, "") || "";
+  const terms = query
+    .replace(/\b\d{1,4}\s*\/\s*\d{1,4}\b/g, " ")
+    .split(/\s+/)
+    .map((term) => term.replace(/[^\w'-]/g, ""))
+    .filter((term) => term.length > 2)
+    .slice(0, 5);
+  const name = terms.join(" ");
+  return [
+    name && number ? `name:"${name}" number:"${number.split("/")[0]}"` : "",
+    name ? `name:"${name}"` : "",
+    terms.length ? terms.map((term) => `name:${term}*`).join(" ") : "",
+    number ? `number:"${number.split("/")[0]}"` : "",
+  ].filter(Boolean);
+}
+
+function buildScryfallQueries(query) {
+  const collector = query.match(/\b[A-Z]{2,5}[-\s]?\d{1,4}\b|\b\d{1,4}\b/i)?.[0] || "";
+  const terms = query
+    .replace(/\b\d{1,4}\s*\/\s*\d{1,4}\b/g, " ")
+    .split(/\s+/)
+    .map((term) => term.replace(/[^\w'-]/g, ""))
+    .filter((term) => term.length > 2)
+    .slice(0, 5);
+  const name = terms.join(" ");
+  return [
+    name && collector ? `!"${name}" cn:${collector.replace(/[^\w-]/g, "")}` : "",
+    name ? `!"${name}"` : "",
+    name ? name : "",
+    collector ? `cn:${collector.replace(/[^\w-]/g, "")}` : "",
+  ].filter(Boolean);
 }
 
 function tcgResultCard(card) {
@@ -1598,7 +1890,7 @@ function initGradePhotoLab() {
       result.frontUrl = uploaded.get("front").dataUrl || uploaded.get("front").url;
       result.backUrl = uploaded.get("back").dataUrl || uploaded.get("back").url;
       renderAutomaticGrade(result, report, status);
-      billing?.recordUsage("grades");
+      void recordMeteredUsage("grades");
       renderPlanGate("#gradingPlanGate", "grading");
     } catch (error) {
       status.textContent = `Automatic grading failed: ${error.message}`;
@@ -2594,7 +2886,7 @@ function initListingStudio() {
     event.preventDefault();
     const status = document.querySelector("#listingOutput");
     if (blockForPlan("sellKits", status, "Listing kit generation paused.")) return;
-    billing?.recordUsage("sellKits");
+    void recordMeteredUsage("sellKits");
     activeListingKit = buildListingKit();
     renderListingLaunchKit(activeListingKit);
     renderPlanGate("#marketplacePlanGate", "marketplace");

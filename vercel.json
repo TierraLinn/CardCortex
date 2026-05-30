@@ -14,9 +14,13 @@
   "rewrites": [
     { "source": "/vault", "destination": "/vault.html" },
     { "source": "/scanner", "destination": "/scanner.html" },
+    { "source": "/sources", "destination": "/catalog-sources.html" },
+    { "source": "/catalog-sources", "destination": "/catalog-sources.html" },
     { "source": "/values", "destination": "/pricing.html" },
     { "source": "/grading", "destination": "/grading.html" },
     { "source": "/sell", "destination": "/marketplace.html" },
-    { "source": "/assistant", "destination": "/assistant.html" }
+    { "source": "/assistant", "destination": "/assistant.html" },
+    { "source": "/account", "destination": "/auth.html" },
+    { "source": "/backend-status", "destination": "/backend-status.html" }
   ]
 }

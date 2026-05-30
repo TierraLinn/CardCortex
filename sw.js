@@ -1,9 +1,10 @@
-const CARD_CORTEX_CACHE = "cardcortex-shell-v28-launch-clean";
+const CARD_CORTEX_CACHE = "cardcortex-shell-v36-backend-config";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
   "./vault.html",
   "./scanner.html",
+  "./catalog-sources.html",
   "./pricing.html",
   "./reports.html",
   "./upgrade.html",
@@ -11,6 +12,7 @@ const SHELL_ASSETS = [
   "./marketplace.html",
   "./assistant.html",
   "./auth.html",
+  "./backend-status.html",
   "./styles.css",
   "./data.js",
   "./billing.js",
@@ -18,6 +20,8 @@ const SHELL_ASSETS = [
   "./supabase-client.js",
   "./app.js",
   "./auth.js",
+  "./backend-status.js",
+  "./catalog-sources.js",
   "./brand3d.js",
   "./hero3d.js",
   "./page3d.js",
